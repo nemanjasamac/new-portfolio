@@ -12,6 +12,8 @@ onMounted(() => {
 
 <template>
   <div class="boot-screen">
+    <div class="corner-text top-left">samacOS Portfolio</div>
+    <div class="corner-text bottom-right">For best experience enter full screen</div>
     <div class="content">
       <svg class="apple-logo" width="100px" height="100px" viewBox="-1.5 0 20 20" version="1.1" xmlns="http://www.w3.org/2000/svg" xmlns:xlink="http://www.w3.org/1999/xlink">
         <g stroke="none" stroke-width="1" fill="none" fill-rule="evenodd">
@@ -41,6 +43,24 @@ onMounted(() => {
   justify-content: center;
   align-items: center;
   z-index: 9999;
+}
+
+.corner-text {
+  position: absolute;
+  color: #666;
+  font-family: -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, Helvetica, Arial, sans-serif;
+  font-size: 0.8rem;
+  pointer-events: none;
+}
+
+.top-left {
+  top: 20px;
+  left: 20px;
+}
+
+.bottom-right {
+  bottom: 20px;
+  right: 20px;
 }
 
 .content {

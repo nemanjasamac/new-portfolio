@@ -1,32 +1,46 @@
 <script setup>
-import { ref, onMounted } from 'vue'
+import { ref } from 'vue'
+import MacBookIntro from './components/MacBookIntro.vue'
 import BootLoader from './components/BootLoader.vue'
 import LoginScreen from './components/LoginScreen.vue'
+import Desktop from './components/Desktop.vue'
 
-const isLoading = ref(true)
-const isLoggedIn = ref(false)
+const showIntro = ref(true)
+const showBoot = ref(false)
+const showLogin = ref(false)
+const showDesktop = ref(false)
 
-onMounted(() => {
-  // Simulate boot time matching the CSS animation
+const handleBoot = () => {
+  showIntro.value = false
+  showBoot.value = true
+  
+  // Simulate boot time
   setTimeout(() => {
-    isLoading.value = false
-  }, 3500)
-})
+    showBoot.value = false
+    showLogin.value = true
+  }, 4000)
+}
 
 const handleLogin = () => {
-  isLoggedIn.value = true
+  showLogin.value = false
+  showDesktop.value = true
 }
 </script>
 
 <template>
+  <MacBookIntro v-if="showIntro" @boot="handleBoot" />
+  
   <Transition name="fade">
-    <BootLoader v-if="isLoading" />
+    <BootLoader v-if="showBoot" />
   </Transition>
   
-  <LoginScreen v-if="!isLoggedIn" @login="handleLogin" />
-  <div v-else class="desktop">
-    <h1>Welcome to my Portfolio</h1>
-  </div>
+  <Transition name="fade">
+    <LoginScreen v-if="showLogin" @login="handleLogin" />
+  </Transition>
+  
+  <Transition name="fade">
+    <Desktop v-if="showDesktop" />
+  </Transition>
 </template>
 
 <style>
@@ -38,16 +52,5 @@ const handleLogin = () => {
 .fade-enter-from,
 .fade-leave-to {
   opacity: 0;
-}
-</style>
-
-<style scoped>
-.desktop {
-  height: 100vh;
-  display: flex;
-  justify-content: center;
-  align-items: center;
-  background-color: #f0f0f0;
-  color: #333;
 }
 </style>
