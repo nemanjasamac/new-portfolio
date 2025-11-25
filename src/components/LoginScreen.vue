@@ -112,14 +112,14 @@ onUnmounted(() => {
         </div>
         
         <div class="battery-group">
-          <span class="battery-text">50%</span>
+          <span class="battery-text">100%</span>
           <svg class="icon" width="24" height="24" viewBox="0 0 24 24" fill="none" xmlns="http://www.w3.org/2000/svg">
             <rect x="3.25" y="7.25" width="16.5" height="9.5" rx="2.5" stroke="currentColor" stroke-width="1.5" stroke-opacity="0.4"/>
             <path d="M22 10.5V13.5" stroke="currentColor" stroke-width="1.5" stroke-linecap="round" stroke-opacity="0.4"/>
             <rect x="5.5" y="9.5" width="12" height="5" rx="1" fill="currentColor"/>
           </svg>
         </div>
-        
+        <!-- Control center icon   <svg viewBox="0 0 29 29" width="16" height="16" xmlns="http://www.w3.org/2000/svg" fill="currentColor"><path d="M7.5,13h14a5.5,5.5,0,0,0,0-11H7.5a5.5,5.5,0,0,0,0,11Zm0-9h14a3.5,3.5,0,0,1,0,7H7.5a3.5,3.5,0,0,1,0-7Zm0,6A2.5,2.5,0,1,0,5,7.5,2.5,2.5,0,0,0,7.5,10Zm14,6H7.5a5.5,5.5,0,0,0,0,11h14a5.5,5.5,0,0,0,0-11Zm1.43439,8a2.5,2.5,0,1,1,2.5-2.5A2.5,2.5,0,0,1,22.93439,24Z"></path></svg> -->
         <svg class="icon" width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M5 12.55a11 11 0 0 1 14.08 0"></path><path d="M1.42 9a16 16 0 0 1 21.16 0"></path><path d="M8.53 16.11a6 6 0 0 1 6.95 0"></path><line x1="12" y1="20" x2="12.01" y2="20"></line></svg>
       </div>
     </div>
@@ -159,6 +159,7 @@ onUnmounted(() => {
 <style scoped>
 .login-screen {
   position: fixed;
+  user-select: none;
   top: 0;
   left: 0;
   width: 100vw;
@@ -205,7 +206,7 @@ onUnmounted(() => {
   border: 1.5px solid rgba(255,255,255,0.9);
   padding: 0px 3px;
   border-radius: 4px;
-  cursor: default;
+  cursor: var(--mac-cursor);
   font-weight: 600;
   min-width: 16px;
   text-align: center;
@@ -244,7 +245,7 @@ onUnmounted(() => {
   padding: 3px 10px 3px 4px;
   font-size: 13px;
   color: white;
-  cursor: default;
+  cursor: var(--mac-cursor);
   border-radius: 4px;
   height: 24px;
 }
@@ -387,7 +388,7 @@ onUnmounted(() => {
   background: none;
   border: none;
   color: rgba(255, 255, 255, 0.6);
-  cursor: pointer;
+  cursor: var(--mac-cursor);
   display: flex;
   align-items: center;
   justify-content: center;
@@ -418,7 +419,7 @@ onUnmounted(() => {
   flex-direction: column;
   align-items: center;
   gap: 0.5rem;
-  cursor: pointer;
+  cursor: var(--mac-cursor);
   opacity: 0.7;
   transition: opacity 0.2s;
 }
