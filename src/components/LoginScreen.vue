@@ -6,13 +6,27 @@ const password = ref('')
 const currentTime = ref('')
 const currentDate = ref('')
 const isLangMenuOpen = ref(false)
-const selectedLang = ref('ABC')
+const selectedLang = ref('A')
+const languages = [
+  { id: 'A', label: 'ABC', icon: 'A' },
+  { id: 'US', label: 'U.S.', icon: 'US' },
+  { id: 'SR', label: 'Serbian (Latin)', icon: 'SR' },
+  { id: 'CP', label: 'Serbian', icon: 'CP' },
+]
 let timer = null
 
 const updateTime = () => {
   const now = new Date()
-  currentDate.value = now.toLocaleDateString('en-US', { weekday: 'short', month: 'short', day: 'numeric' })
-  currentTime.value = now.toLocaleTimeString('en-US', { hour: '2-digit', minute: '2-digit', hour12: false })
+  const dateOptions = { weekday: 'short', month: 'short', day: 'numeric' }
+  const timeOptions = { hour: '2-digit', minute: '2-digit', hour12: false }
+  
+  // Format: Mon Nov 24
+  const dateStr = now.toLocaleDateString('en-US', dateOptions).replace(',', '')
+  // Format: 22:51
+  const timeStr = now.toLocaleTimeString('en-US', timeOptions)
+  
+  currentDate.value = dateStr
+  currentTime.value = timeStr
 }
 
 const handleLogin = () => {
@@ -53,14 +67,60 @@ onUnmounted(() => {
         <div class="lang-container">
           <span class="lang-icon" @click="toggleLangMenu">{{ selectedLang }}</span>
           <div v-if="isLangMenuOpen" class="lang-dropdown">
-            <div class="lang-option" @click="selectLang('ABC')">ABC</div>
-            <div class="lang-option" @click="selectLang('English')">English</div>
-            <div class="lang-option" @click="selectLang('Serbian')">Serbian</div>
+            <div class="lang-option" v-for="lang in languages" :key="lang.id" @click="selectLang(lang.id)">
+              <div class="check-col">
+                <svg v-if="selectedLang === lang.id" width="10" height="10" viewBox="0 0 12 12" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M2 6L4.5 8.5L10 3"/></svg>
+              </div>
+              <div class="lang-icon-box">{{ lang.icon }}</div>
+              <span class="lang-label">{{ lang.label }}</span>
+            </div>
+            
+            <div class="menu-separator"></div>
+            
+            <div class="menu-item">
+              <div class="check-col"></div>
+              <div class="menu-icon">
+                <svg width="13" height="13" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><rect x="3" y="3" width="18" height="18" rx="2" ry="2"></rect><line x1="9" y1="3" x2="9" y2="21"></line></svg>
+              </div>
+              <span class="menu-label">Show Emoji & Symbols</span>
+            </div>
+
+            <div class="menu-item">
+              <div class="check-col"></div>
+              <div class="menu-icon">
+                <svg width="13" height="13" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><rect x="2" y="4" width="20" height="16" rx="2"></rect><line x1="6" y1="8" x2="6.01" y2="8"></line><line x1="10" y1="8" x2="10.01" y2="8"></line><line x1="14" y1="8" x2="14.01" y2="8"></line><line x1="18" y1="8" x2="18.01" y2="8"></line><line x1="6" y1="12" x2="6.01" y2="12"></line><line x1="10" y1="12" x2="10.01" y2="12"></line><line x1="14" y1="12" x2="14.01" y2="12"></line><line x1="18" y1="12" x2="18.01" y2="12"></line><line x1="7" y1="16" x2="17" y2="16"></line></svg>
+              </div>
+              <span class="menu-label">Show Keyboard Viewer</span>
+            </div>
+
+            <div class="menu-separator"></div>
+
+            <div class="menu-item">
+              <div class="check-col"></div>
+              <div class="menu-icon"></div>
+              <span class="menu-label">Show Input Source Name</span>
+            </div>
+
+            <div class="menu-separator"></div>
+
+            <div class="menu-item">
+              <div class="check-col"></div>
+              <div class="menu-icon"></div>
+              <span class="menu-label">Open Keyboard Settings...</span>
+            </div>
           </div>
         </div>
-        <svg class="icon" xmlns="http://www.w3.org/2000/svg" width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M5 12.55a11 11 0 0 1 14.08 0"></path><path d="M1.42 9a16 16 0 0 1 21.16 0"></path><path d="M8.53 16.11a6 6 0 0 1 6.95 0"></path><line x1="12" y1="20" x2="12.01" y2="20"></line></svg>
-        <svg class="icon" xmlns="http://www.w3.org/2000/svg" width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><rect x="2" y="7" width="16" height="10" rx="2" ry="2"></rect><line x1="22" y1="11" x2="22" y2="13"></line></svg>
-        <span class="battery-text">53%</span>
+        
+        <div class="battery-group">
+          <span class="battery-text">50%</span>
+          <svg class="icon" width="24" height="24" viewBox="0 0 24 24" fill="none" xmlns="http://www.w3.org/2000/svg">
+            <rect x="3.25" y="7.25" width="16.5" height="9.5" rx="2.5" stroke="currentColor" stroke-width="1.5" stroke-opacity="0.4"/>
+            <path d="M22 10.5V13.5" stroke="currentColor" stroke-width="1.5" stroke-linecap="round" stroke-opacity="0.4"/>
+            <rect x="5.5" y="9.5" width="12" height="5" rx="1" fill="currentColor"/>
+          </svg>
+        </div>
+        
+        <svg class="icon" width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M5 12.55a11 11 0 0 1 14.08 0"></path><path d="M1.42 9a16 16 0 0 1 21.16 0"></path><path d="M8.53 16.11a6 6 0 0 1 6.95 0"></path><line x1="12" y1="20" x2="12.01" y2="20"></line></svg>
       </div>
     </div>
 
@@ -124,9 +184,16 @@ onUnmounted(() => {
 .status-right {
   display: flex;
   align-items: center;
-  gap: 15px;
-  font-size: 0.8rem;
+  gap: 18px;
+  font-size: 13px;
   font-weight: 500;
+  -webkit-font-smoothing: antialiased;
+}
+
+.battery-group {
+  display: flex;
+  align-items: center;
+  gap: 8px;
 }
 
 .lang-container {
@@ -134,37 +201,101 @@ onUnmounted(() => {
 }
 
 .lang-icon {
-  font-size: 0.75rem;
-  border: 1px solid rgba(255,255,255,0.6);
-  padding: 1px 3px;
-  border-radius: 3px;
-  cursor: pointer;
+  font-size: 11px;
+  border: 1.5px solid rgba(255,255,255,0.9);
+  padding: 0px 3px;
+  border-radius: 4px;
+  cursor: default;
+  font-weight: 600;
+  min-width: 16px;
+  text-align: center;
+  display: inline-block;
 }
 
 .lang-dropdown {
   position: absolute;
   top: 100%;
   right: 0;
-  margin-top: 5px;
-  background: rgba(30, 30, 30, 0.9);
-  backdrop-filter: blur(10px);
-  border-radius: 6px;
-  padding: 5px 0;
-  min-width: 100px;
-  box-shadow: 0 4px 12px rgba(0,0,0,0.3);
+  margin-top: 8px;
+  background: rgba(30, 30, 30, 0.6);
+  backdrop-filter: blur(25px);
+  -webkit-backdrop-filter: blur(25px);
+  border-radius: 8px;
+  padding: 5px;
+  min-width: 240px;
+  box-shadow: 0 0 0 1px rgba(255,255,255,0.1), 0 15px 30px rgba(0,0,0,0.3);
   z-index: 200;
+  display: flex;
+  flex-direction: column;
 }
 
-.lang-option {
-  padding: 5px 15px;
-  font-size: 0.8rem;
+.top-time {
+  font-weight: 500;
+  margin-left: 4px;
+}
+
+.icon {
+  opacity: 0.9;
+}
+
+.lang-option, .menu-item {
+  display: flex;
+  align-items: center;
+  padding: 3px 10px 3px 4px;
+  font-size: 13px;
   color: white;
-  cursor: pointer;
-  transition: background 0.2s;
+  cursor: default;
+  border-radius: 4px;
+  height: 24px;
 }
 
-.lang-option:hover {
-  background: rgba(255, 255, 255, 0.2);
+.lang-option:hover, .menu-item:hover {
+  background: #007AFF;
+}
+
+.check-col {
+  width: 16px;
+  display: flex;
+  justify-content: center;
+  align-items: center;
+  margin-right: 4px;
+}
+
+.lang-icon-box {
+  width: 16px;
+  height: 16px;
+  background: #f0f0f0;
+  border-radius: 3px;
+  display: flex;
+  justify-content: center;
+  align-items: center;
+  font-size: 9px;
+  font-weight: 700;
+  color: #333;
+  margin-right: 8px;
+  box-shadow: 0 0.5px 1px rgba(0,0,0,0.2);
+}
+
+.menu-icon {
+  width: 16px;
+  height: 16px;
+  display: flex;
+  justify-content: center;
+  align-items: center;
+  margin-right: 8px;
+  color: #fff;
+}
+
+.lang-label, .menu-label {
+  flex: 1;
+  white-space: nowrap;
+  font-weight: 400;
+}
+
+.menu-separator {
+  height: 1px;
+  background: rgba(255, 255, 255, 0.15);
+  margin: 4px 10px;
 }
 
 .clock-section {
