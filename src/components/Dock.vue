@@ -1,7 +1,11 @@
 <script setup>
 import { ref } from 'vue'
+import safariIcon from '../assets/Icons/safari.svg'
+import folderIcon from '../assets/Icons/folder.png'
+import finderIcon from '../assets/Icons/finder.png'
 
 const dockItems = ref([
+  { id: 'finder-app', label: 'Finder', icon: 'finder-app' },
   { id: 'finder', label: 'About Me', icon: 'finder' },
   { id: 'resume', label: 'My Resume', icon: 'resume' },
   { id: 'projects', label: 'My Projects', icon: 'folder' },
@@ -24,6 +28,9 @@ const hoveredIndex = ref(null)
       >
         <div class="tooltip">{{ item.label }}</div>
         <div class="app-icon">
+          <!-- Finder App -->
+          <img v-if="item.icon === 'finder-app'" :src="finderIcon" class="icon-img" alt="Finder" />
+
           <!-- Finder / About Me -->
           <svg v-if="item.icon === 'finder'" viewBox="0 0 100 100" class="icon-svg">
             <rect x="5" y="5" width="90" height="90" rx="22" fill="#ececec"/>
@@ -54,27 +61,10 @@ const hoveredIndex = ref(null)
           </svg>
 
           <!-- Projects / Folder -->
-          <svg v-if="item.icon === 'folder'" viewBox="0 0 100 100" class="icon-svg">
-            <path d="M10 25c0-5.5 4.5-10 10-10h25l5 5h30c5.5 0 10 4.5 10 10v50c0 5.5-4.5 10-10 10H20c-5.5 0-10-4.5-10-10V25z" fill="#5FC9F8"/>
-            <path d="M10 40c0-5.5 4.5-10 10-10h60c5.5 0 10 4.5 10 10v40c0 5.5-4.5 10-10 10H20c-5.5 0-10-4.5-10-10V40z" fill="#007AFF"/>
-            <rect x="35" y="55" width="30" height="4" rx="2" fill="rgba(255,255,255,0.3)"/>
-          </svg>
+          <img v-if="item.icon === 'folder'" :src="folderIcon" class="icon-img" alt="Projects" />
 
           <!-- Safari -->
-          <svg v-if="item.icon === 'safari'" viewBox="0 0 100 100" class="icon-svg">
-            <circle cx="50" cy="50" r="45" fill="#fff"/>
-            <circle cx="50" cy="50" r="45" fill="url(#safari-grad)"/>
-            <circle cx="50" cy="50" r="40" fill="#29B6F6"/>
-            <path d="M50 10l5 35 35 5-35 5-5 35-5-35-35-5 35-5 5-35z" fill="#fff" opacity="0.2"/>
-            <path d="M50 18l4 28 28 4-28 4-4 28-4-28-28-4 28-4 4-28z" fill="#EA4335"/>
-            <path d="M50 18l-4 28-28 4 28 4 4 28 4-28 28-4-28-4-4-28z" fill="#fff"/>
-            <defs>
-              <linearGradient id="safari-grad" x1="0%" y1="0%" x2="100%" y2="100%">
-                <stop offset="0%" style="stop-color:#f9f9f9;stop-opacity:1" />
-                <stop offset="100%" style="stop-color:#e0e0e0;stop-opacity:1" />
-              </linearGradient>
-            </defs>
-          </svg>
+          <img v-if="item.icon === 'safari'" :src="safariIcon" class="icon-img" alt="Safari" />
 
           <!-- Mail -->
           <svg v-if="item.icon === 'mail'" viewBox="0 0 100 100" class="icon-svg">
@@ -148,6 +138,12 @@ const hoveredIndex = ref(null)
 .icon-svg {
   width: 100%;
   height: 100%;
+}
+
+.icon-img {
+  width: 100%;
+  height: 100%;
+  object-fit: cover;
 }
 
 .tooltip {
