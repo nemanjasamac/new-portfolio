@@ -2,13 +2,64 @@
 import { ref, onMounted, onUnmounted, computed } from 'vue'
 import Dock from './Dock.vue'
 import PreviewWindow from './PreviewWindow.vue'
+import AboutMeApp from './AboutMeApp.vue'
+import ProjectWindow from './ProjectWindow.vue'
+import TerminalApp from './TerminalApp.vue'
+import ControlCenter from './ControlCenter.vue'
 import folderIcon from '../assets/Icons/folder.png'
 import safariIcon from '../assets/Icons/safari.svg'
 
 const emit = defineEmits(['reboot'])
 
 const isPreviewOpen = ref(false)
+const isAboutMeOpen = ref(false)
+const isTerminalOpen = ref(false)
+const isControlCenterOpen = ref(false)
+const aboutMeInitialSection = ref('about')
+const openProjects = ref([])
 const previewFile = ref({ title: '', url: '' })
+
+const projectsData = {
+  'portfolio': {
+    id: 'portfolio',
+    title: 'Portfolio V1',
+    subtitle: 'Personal Website',
+    description: 'My first portfolio website built with Vue.js and MacOS inspired design. It features a fully functional desktop environment, window management, and a dock.',
+    technologies: ['Vue.js', 'CSS3', 'Vite'],
+    link: 'https://github.com/nemanjasamac/new-portfolio',
+    github: 'https://github.com/nemanjasamac/new-portfolio',
+    images: [
+      'https://images.unsplash.com/photo-1498050108023-c5249f4df085?auto=format&fit=crop&w=800&q=80',
+      'https://images.unsplash.com/photo-1504639725590-34d0984388bd?auto=format&fit=crop&w=800&q=80'
+    ]
+  },
+  'ecommerce': {
+    id: 'ecommerce',
+    title: 'E-Commerce App',
+    subtitle: 'Online Store',
+    description: 'A full-featured e-commerce application with product catalog, shopping cart, and checkout process.',
+    technologies: ['React', 'Node.js', 'MongoDB'],
+    link: '#',
+    github: '#',
+    images: [
+      'https://images.unsplash.com/photo-1557821552-17105176677c?auto=format&fit=crop&w=800&q=80',
+      'https://images.unsplash.com/photo-1556742049-0cfed4f7a07d?auto=format&fit=crop&w=800&q=80'
+    ]
+  },
+  'taskmanager': {
+    id: 'taskmanager',
+    title: 'Task Manager',
+    subtitle: 'Productivity Tool',
+    description: 'A task management application to help you stay organized. Features include drag-and-drop tasks, categories, and due dates.',
+    technologies: ['Vue.js', 'Firebase', 'Tailwind'],
+    link: '#',
+    github: '#',
+    images: [
+      'https://images.unsplash.com/photo-1484480974693-6ca0a78fb36b?auto=format&fit=crop&w=800&q=80',
+      'https://images.unsplash.com/photo-1540350394557-8d14678e7f91?auto=format&fit=crop&w=800&q=80'
+    ]
+  }
+}
 
 const currentTime = ref('')
 const currentDate = ref('')
@@ -28,7 +79,11 @@ const languages = [
   { id: 'SR', label: 'Serbian (Latin)', icon: 'SR' },
   { id: 'CP', label: 'Serbian', icon: 'CP' },
 ]
-const desktopItems = ref([])
+const desktopItems = ref([
+  { id: 'about-me', type: 'about-me', name: 'About Me', x: 20, y: 20, selected: false },
+  { id: 'resume', type: 'resume', name: 'My Resume', x: 20, y: 110, selected: false },
+  { id: 'projects-folder', type: 'projects-folder', name: 'My Projects', x: 20, y: 200, selected: false },
+])
 const isDragging = ref(false)
 const dragOffsets = ref({})
 let timer = null
@@ -47,6 +102,30 @@ const createNewFolder = () => {
   isContextMenuOpen.value = false
 }
 
+const openProject = (projectId) => {
+  const project = projectsData[projectId]
+  if (project && !openProjects.value.find(p => p.id === projectId)) {
+    openProjects.value.push({
+      ...project,
+      zIndex: 100 + openProjects.value.length + 1,
+      x: 150 + (openProjects.value.length * 30),
+      y: 100 + (openProjects.value.length * 30)
+    })
+  }
+}
+
+const closeProject = (projectId) => {
+  openProjects.value = openProjects.value.filter(p => p.id !== projectId)
+}
+
+const focusProject = (projectId) => {
+  const project = openProjects.value.find(p => p.id === projectId)
+  if (project) {
+    // Bring to front logic could be improved, but simple z-index bump works for now
+    project.zIndex = Math.max(...openProjects.value.map(p => p.zIndex), 100) + 1
+  }
+}
+
 const openItem = (item) => {
   if (item.type === 'resume') {
     previewFile.value = {
@@ -54,6 +133,42 @@ const openItem = (item) => {
       url: '/Nemanja Samac CV.pdf'
     }
     isPreviewOpen.value = true
+  } else if (item.type === 'about-me') {
+    aboutMeInitialSection.value = 'about'
+    isAboutMeOpen.value = true
+  } else if (item.type === 'project-folder') {
+    openProject(item.projectId)
+  } else if (item.type === 'projects-folder') {
+    aboutMeInitialSection.value = 'projects'
+    isAboutMeOpen.value = true
+  }
+}
+
+const handleOpenApp = (appId) => {
+  if (appId === 'resume') {
+    previewFile.value = {
+      title: 'Nemanja Samac CV.pdf',
+      url: '/Nemanja Samac CV.pdf'
+    }
+    isPreviewOpen.value = true
+  } else if (appId === 'about-me') {
+    aboutMeInitialSection.value = 'about'
+    isAboutMeOpen.value = true
+  }
+}
+
+const handleDockClick = (id) => {
+  if (id === 'resume') {
+    previewFile.value = {
+      title: 'Nemanja Samac CV.pdf',
+      url: '/Nemanja Samac CV.pdf'
+    }
+    isPreviewOpen.value = true
+  } else if (id === 'finder') {
+    aboutMeInitialSection.value = 'about'
+    isAboutMeOpen.value = true
+  } else if (id === 'terminal') {
+    isTerminalOpen.value = !isTerminalOpen.value
   }
 }
 
@@ -657,7 +772,7 @@ onUnmounted(() => {
         </div>
 
         <!-- Control Center -->
-        <div class="status-item">
+        <div class="status-item" @click="isControlCenterOpen = !isControlCenterOpen">
           <svg class="icon" width="18" height="18" viewBox="0 0 29 29" xmlns="http://www.w3.org/2000/svg" fill="currentColor">
             <path d="M7.5,13h14a5.5,5.5,0,0,0,0-11H7.5a5.5,5.5,0,0,0,0,11Zm0-9h14a3.5,3.5,0,0,1,0,7H7.5a3.5,3.5,0,0,1,0-7Zm0,6A2.5,2.5,0,1,0,5,7.5,2.5,2.5,0,0,0,7.5,10Zm14,6H7.5a5.5,5.5,0,0,0,0,11h14a5.5,5.5,0,0,0,0-11Zm1.43439,8a2.5,2.5,0,1,1,2.5-2.5A2.5,2.5,0,0,1,22.93439,24Z"></path>
           </svg>
@@ -670,6 +785,8 @@ onUnmounted(() => {
       </div>
     </div>
     
+    <ControlCenter :is-open="isControlCenterOpen" @close="isControlCenterOpen = false" />
+
     <!-- Desktop Content Area -->
     <div class="desktop-content" @mousedown="handleMouseDown" @mousemove="handleMouseMove" @mouseup="handleMouseUp">
       <!-- Windows -->
@@ -678,6 +795,30 @@ onUnmounted(() => {
         :title="previewFile.title"
         :file-url="previewFile.url"
         @close="isPreviewOpen = false"
+      />
+
+      <AboutMeApp 
+        v-if="isAboutMeOpen"
+        :initial-section="aboutMeInitialSection"
+        @close="isAboutMeOpen = false"
+        @open-project="openProject"
+      />
+
+      <TerminalApp 
+        v-if="isTerminalOpen"
+        @close="isTerminalOpen = false"
+        @open-app="handleOpenApp"
+      />
+
+      <ProjectWindow
+        v-for="project in openProjects"
+        :key="project.id"
+        :project="project"
+        :initial-x="project.x"
+        :initial-y="project.y"
+        :z-index="project.zIndex"
+        @close="closeProject(project.id)"
+        @focus="focusProject(project.id)"
       />
 
       <!-- Windows and icons will go here -->
@@ -691,7 +832,7 @@ onUnmounted(() => {
         @dblclick="openItem(item)"
       >
         <div class="item-icon">
-          <img v-if="item.type === 'folder'" :src="folderIcon" width="50" height="50" draggable="false" />
+          <img v-if="item.type === 'folder' || item.type === 'project-folder' || item.type === 'projects-folder'" :src="folderIcon" width="50" height="50" draggable="false" />
           
           <!-- About Me -->
           <svg v-else-if="item.type === 'about-me'" viewBox="0 0 100 100" width="50" height="50">
@@ -753,7 +894,7 @@ onUnmounted(() => {
     </div>
 
     <!-- Dock Component -->
-    <Dock />
+    <Dock @open-app="handleDockClick" />
   </div>
 </template>
 
