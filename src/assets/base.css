@@ -1,5 +1,6 @@
 :root {
-  --mac-cursor: url('./cursors/default.svg'), auto;
+  --mac-cursor: url('./cursors/default.svg') 8 5, auto;
+  --mac-pointer: url('./cursors/pointer.svg') 13 8, pointer;
 }
 
 body {

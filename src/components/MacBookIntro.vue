@@ -1,25 +1,41 @@
 <script setup>
 import { onMounted, onUnmounted, ref } from 'vue'
 import * as THREE from 'three'
+import { GLTFLoader } from 'three/examples/jsm/loaders/GLTFLoader.js'
+import { PointerLockControls } from 'three/examples/jsm/controls/PointerLockControls.js'
 import gsap from 'gsap'
-import { FontLoader } from 'three/examples/jsm/loaders/FontLoader.js'
-import { TextGeometry } from 'three/examples/jsm/geometries/TextGeometry.js'
-
+import macbookUrl from '../assets/models/macbook.glb'
+import officeUrl from '../assets/models/office.glb'
 const emit = defineEmits(['boot'])
 const container = ref(null)
 
 // three.js globals
 let scene, camera, renderer
-let laptopGroup, lidGroup, screenMesh
+let laptopGroup, screenMesh
+let controls
 let animationId
 const raycaster = new THREE.Raycaster()
 const mouse = new THREE.Vector2()
 let isZooming = false
+let isBooting = false
+let hoverTimer = 0
+const HOVER_THRESHOLD = 1.0 // seconds to trigger boot
 
 // extras
 let glow = null          // power button glow mesh
 let textMesh = null      // 3D text mesh
 let glowTween = null
+
+// Movement state
+const moveState = {
+  forward: false,
+  backward: false,
+  left: false,
+  right: false
+}
+const velocity = new THREE.Vector3()
+const direction = new THREE.Vector3()
+let prevTime = performance.now()
 
 onMounted(() => {
   init()
@@ -27,7 +43,6 @@ onMounted(() => {
 
 onUnmounted(() => {
   cancelAnimationFrame(animationId)
-  window.removeEventListener('mousemove', handleMouseMove)
   window.removeEventListener('click', handleClick)
   window.removeEventListener('resize', handleResize)
   if (renderer) {
@@ -48,9 +63,79 @@ function init() {
     45,
     window.innerWidth / window.innerHeight,
     0.1,
-    200
+    1000
   )
-  camera.position.set(0, 4, 10)
+  camera.position.set(-2, 1.6, 4) // Lower and closer
+
+  // Controls
+  controls = new PointerLockControls(camera, document.body)
+  controls.pointerSpeed = 0.3 // Slower sensitivity
+  
+  const overlay = document.querySelector('.intro-overlay')
+  const subText = document.querySelector('.sub-text')
+  
+  // Click on the overlay to lock controls
+  overlay.addEventListener('click', () => {
+    controls.lock()
+  })
+  
+  controls.addEventListener('lock', () => {
+    overlay.style.display = 'none'
+  })
+  
+  controls.addEventListener('unlock', () => {
+    if (isBooting) return
+    overlay.style.display = 'flex'
+    if (subText) subText.textContent = '(Click to Resume)'
+  })
+
+  scene.add(camera)
+
+  // Key listeners
+  const onKeyDown = (event) => {
+    switch (event.code) {
+      case 'ArrowUp':
+      case 'KeyW':
+        moveState.forward = true
+        break
+      case 'ArrowLeft':
+      case 'KeyA':
+        moveState.left = true
+        break
+      case 'ArrowDown':
+      case 'KeyS':
+        moveState.backward = true
+        break
+      case 'ArrowRight':
+      case 'KeyD':
+        moveState.right = true
+        break
+    }
+  }
+
+  const onKeyUp = (event) => {
+    switch (event.code) {
+      case 'ArrowUp':
+      case 'KeyW':
+        moveState.forward = false
+        break
+      case 'ArrowLeft':
+      case 'KeyA':
+        moveState.left = false
+        break
+      case 'ArrowDown':
+      case 'KeyS':
+        moveState.backward = false
+        break
+      case 'ArrowRight':
+      case 'KeyD':
+        moveState.right = false
+        break
+    }
+  }
+
+  document.addEventListener('keydown', onKeyDown)
+  document.addEventListener('keyup', onKeyUp)
 
   // Renderer
   renderer = new THREE.WebGLRenderer({ antialias: true })
@@ -84,110 +169,75 @@ function init() {
   // DESK & WALL
   // --------------------------------------------------------
 
-  const deskGeometry = new THREE.BoxGeometry(30, 0.5, 20)
-  const deskMaterial = new THREE.MeshStandardMaterial({
-    color: 0x1a1a1a,
-    roughness: 0.8,
-    metalness: 0.1
-  })
-  const desk = new THREE.Mesh(deskGeometry, deskMaterial)
-  desk.position.y = -0.25
-  desk.receiveShadow = true
-  scene.add(desk)
+  const loader = new GLTFLoader()
 
-  const wallGeometry = new THREE.PlaneGeometry(40, 20)
-  const wallMaterial = new THREE.MeshStandardMaterial({
-    color: 0x111111,
-    roughness: 0.8,
-    metalness: 0.1
+  // Load Office
+  loader.load(officeUrl, (gltf) => {
+    const office = gltf.scene
+    office.scale.set(10, 10, 10) 
+    office.position.set(0, -1, 0) 
+    
+    office.traverse((child) => {
+      if (child.isMesh) {
+        child.receiveShadow = true
+        child.castShadow = true
+      }
+    })
+    scene.add(office)
   })
-  const wall = new THREE.Mesh(wallGeometry, wallMaterial)
-  wall.position.set(0, 5, -6)
-  wall.receiveShadow = true
-  scene.add(wall)
 
-  
   // --------------------------------------------------------
   // LAPTOP GROUP
   // --------------------------------------------------------
 
   laptopGroup = new THREE.Group()
-  // Sit on desk (desk top is at 0)
-  laptopGroup.position.set(0, 0.06, 0)
+  // Sit on desk (adjusted position)
+  laptopGroup.position.set(0, -8, -1)
+  laptopGroup.rotation.y = -Math.PI / 2
   scene.add(laptopGroup)
 
   // Camera LookAt
   camera.lookAt(0, 0.5, 0)
 
-  const aluminum = new THREE.MeshStandardMaterial({
-    color: 0xbbbbbb,
-    roughness: 0.3,
-    metalness: 0.9
+  // Load GLB Model
+  loader.load(macbookUrl, (gltf) => {
+    const model = gltf.scene
+    // Adjust scale and rotation if needed
+    model.scale.set(15, 15, 15) 
+    model.position.set(0, -1, 0)
+    model.rotation.y = 0 // Rotate to face camera if needed
+
+    model.traverse((child) => {
+      if (child.isMesh) {
+        child.castShadow = true
+        child.receiveShadow = true
+        
+        // Try to identify screen mesh by name or material name
+        const name = child.name.toLowerCase()
+        const matName = child.material ? child.material.name.toLowerCase() : ''
+        
+        if (name.includes('screen') || name.includes('display') || 
+            matName.includes('screen') || matName.includes('display')) {
+          screenMesh = child
+          // Clone material to avoid affecting other meshes sharing same material
+          screenMesh.material = screenMesh.material.clone()
+          screenMesh.material.color.setHex(0x000000)
+          screenMesh.material.emissive.setHex(0x000000)
+        }
+      }
+    })
+
+    laptopGroup.add(model)
   })
-
-  const blackPlastic = new THREE.MeshStandardMaterial({
-    color: 0x111111,
-    roughness: 0.6
-  })
-
-  // Base
-  const baseGeo = new THREE.BoxGeometry(3.5, 0.12, 2.4)
-  const base = new THREE.Mesh(baseGeo, aluminum)
-  base.castShadow = true
-  base.receiveShadow = true
-  laptopGroup.add(base)
-
-  // Keyboard (grid tastera)
-  const keyboard = new THREE.Group()
-  keyboard.position.set(0, 0.065, 0.25)
-
-  for (let x = -1.2; x <= 1.2; x += 0.2) {
-    for (let z = -0.6; z <= 0.6; z += 0.2) {
-      const keyGeo = new THREE.BoxGeometry(0.16, 0.02, 0.16)
-      const key = new THREE.Mesh(keyGeo, blackPlastic)
-      key.position.set(x, 0, z)
-      key.castShadow = true
-      keyboard.add(key)
-    }
-  }
-  laptopGroup.add(keyboard)
-
-  // Lid group (ekran)
-  lidGroup = new THREE.Group()
-  lidGroup.position.set(0, 0.06, -1.2)
-  laptopGroup.add(lidGroup)
-
-  const lidGeo = new THREE.BoxGeometry(3.5, 0.08, 2.4)
-  lidGeo.translate(0, 0.04, 1.2) // pivot u šarki
-  const lid = new THREE.Mesh(lidGeo, aluminum)
-  lid.castShadow = true
-  lidGroup.add(lid)
-
-  // Bezel
-  const bezelGeo = new THREE.PlaneGeometry(3.3, 2.1)
-  bezelGeo.translate(0, 0.09, 1.2)
-  bezelGeo.rotateX(-Math.PI / 2)
-  const bezel = new THREE.Mesh(bezelGeo, blackPlastic)
-  lidGroup.add(bezel)
-
-  // Screen
-  const screenGeo = new THREE.PlaneGeometry(3.1, 1.9)
-  screenGeo.translate(0, 0.091, 1.2)
-  screenGeo.rotateX(-Math.PI / 2)
-  const screenMat = new THREE.MeshBasicMaterial({ color: 0x000000 })
-  screenMesh = new THREE.Mesh(screenGeo, screenMat)
-  lidGroup.add(screenMesh)
-
-  // Otvoren ugao
-  lidGroup.rotation.x = -1.5
 
   // Power button hit area (nevidljivo)
-  const hitGeo = new THREE.CircleGeometry(0.25, 32)
+  const hitGeo = new THREE.CircleGeometry(0.2, 32)
   hitGeo.rotateX(-Math.PI / 2)
   const hitMat = new THREE.MeshBasicMaterial({ visible: false })
   const power = new THREE.Mesh(hitGeo, hitMat)
   power.name = 'powerButton'
-  power.position.set(1.5, 0.07, -0.8)
+  // Match the glow position
+  power.position.set(1.95, -0.8, -1.2)
   laptopGroup.add(power)
 
   // Glow disk ispod dugmeta
@@ -195,11 +245,15 @@ function init() {
   glowGeo.rotateX(-Math.PI / 2)
   const glowMat = new THREE.MeshBasicMaterial({
     transparent: true,
-    opacity: 0.4
+    opacity: 0.4,
+    color: 0xffffff
   })
   glow = new THREE.Mesh(glowGeo, glowMat)
-  glow.position.set(1.5, 0.061, -0.8)
+  glow.position.set(1.95, -0.8, -1.2)
   laptopGroup.add(glow)
+
+  // Arrow and Text
+  createArrowAndText()
 
   // Pulsiranje glowa
   glowTween = gsap.to(glow.material, {
@@ -214,7 +268,7 @@ function init() {
   // EVENT LISTENERS
   // --------------------------------------------------------
 
-  window.addEventListener('mousemove', handleMouseMove)
+  // window.addEventListener('mousemove', handleMouseMove) // Removed for PointerLock
   window.addEventListener('click', handleClick)
   window.addEventListener('resize', handleResize)
 
@@ -222,16 +276,75 @@ function init() {
 }
 
 // --------------------------------------------------------
-// RAYCAST: MOUSEMOVE
+// CREATE ARROW AND TEXT
 // --------------------------------------------------------
 
-function handleMouseMove(e) {
+function createArrowAndText() {
+  const arrowGroup = new THREE.Group()
+  arrowGroup.position.set(1.95, 0.8, -1.2) // Above the button
+
+  // Arrow Body (Cylinder)
+  const cylinderGeo = new THREE.CylinderGeometry(0.02, 0.02, 0.3, 32)
+  const arrowMat = new THREE.MeshBasicMaterial({ color: 0xffffff })
+  const cylinder = new THREE.Mesh(cylinderGeo, arrowMat)
+  cylinder.position.y = 0.15
+  arrowGroup.add(cylinder)
+
+  // Arrow Head (Cone)
+  const coneGeo = new THREE.ConeGeometry(0.08, 0.2, 32)
+  const cone = new THREE.Mesh(coneGeo, arrowMat)
+  cone.position.y = 0 // Tip at 0? No, center at 0.
+  // Cone height is 0.2. Center is at 0. Tip is at 0.1, base at -0.1.
+  // We want tip pointing down.
+  cone.rotation.x = Math.PI
+  cone.position.y = 0
+  arrowGroup.add(cone)
+
+  // Text Label
+  const canvas = document.createElement('canvas')
+  const ctx = canvas.getContext('2d')
+  canvas.width = 512
+  canvas.height = 128
+  
+  // ctx.fillStyle = 'rgba(0,0,0,0.5)'; // Debug background
+  // ctx.fillRect(0, 0, canvas.width, canvas.height);
+  
+  ctx.font = 'bold 60px -apple-system, BlinkMacSystemFont, sans-serif'
+  ctx.fillStyle = 'white'
+  ctx.textAlign = 'center'
+  ctx.textBaseline = 'bottom'
+  ctx.shadowColor = 'rgba(0,0,0,0.8)'
+  ctx.shadowBlur = 10
+  ctx.fillText('Turn on samacOS', canvas.width / 2, canvas.height - 10)
+  
+  const texture = new THREE.CanvasTexture(canvas)
+  const material = new THREE.SpriteMaterial({ map: texture })
+  const sprite = new THREE.Sprite(material)
+  sprite.position.y = 0.5
+  sprite.scale.set(2, 0.5, 1) // Aspect ratio 4:1
+  arrowGroup.add(sprite)
+
+  laptopGroup.add(arrowGroup)
+
+  // Float animation
+  gsap.to(arrowGroup.position, {
+    y: 1.0,
+    duration: 1.5,
+    yoyo: true,
+    repeat: -1,
+    ease: 'sine.inOut'
+  })
+}
+
+// --------------------------------------------------------
+// RAYCAST: MOUSEMOVE (Adapted for Center Screen)
+// --------------------------------------------------------
+
+function checkIntersection(delta) {
   if (isZooming) return
 
-  mouse.x = (e.clientX / window.innerWidth) * 2 - 1
-  mouse.y = -(e.clientY / window.innerHeight) * 2 + 1
-
-  raycaster.setFromCamera(mouse, camera)
+  // Raycast from center of screen
+  raycaster.setFromCamera(new THREE.Vector2(0, 0), camera)
   const hits = raycaster.intersectObjects(scene.children, true)
   const btnHover = hits.some(h => h.object.name === 'powerButton')
 
@@ -239,17 +352,17 @@ function handleMouseMove(e) {
     if (btnHover) {
       glowTween.pause()
       glow.material.opacity = 1
+      
+      // Auto-trigger boot if hovering
+      hoverTimer += delta
+      if (hoverTimer > HOVER_THRESHOLD) {
+        boot()
+      }
     } else {
       glowTween.play()
+      hoverTimer = 0
     }
   }
-
-  // Parallax tilt
-  gsap.to(laptopGroup.rotation, {
-    x: mouse.y * 0.1,
-    y: mouse.x * 0.1,
-    duration: 1.2
-  })
 }
 
 // --------------------------------------------------------
@@ -258,11 +371,10 @@ function handleMouseMove(e) {
 
 function handleClick(e) {
   if (isZooming) return
+  if (!controls.isLocked) return // Only click if locked
 
-  mouse.x = (e.clientX / window.innerWidth) * 2 - 1
-  mouse.y = -(e.clientY / window.innerHeight) * 2 + 1
-
-  raycaster.setFromCamera(mouse, camera)
+  // Raycast from center
+  raycaster.setFromCamera(new THREE.Vector2(0, 0), camera)
   const hits = raycaster.intersectObjects(scene.children, true)
 
   const btn = hits.find(h => h.object.name === 'powerButton')
@@ -276,17 +388,23 @@ function handleClick(e) {
 // --------------------------------------------------------
 
 function boot() {
+  isBooting = true
   isZooming = true
-  screenMesh.material.color.setHex(0x333333)
+  if (screenMesh) {
+    screenMesh.material.color.setHex(0x333333)
+  }
 
   const tl = gsap.timeline({
-    onComplete: () => emit('boot')
+    onComplete: () => {
+      controls.unlock()
+      emit('boot')
+    }
   })
 
   tl.to(camera.position, {
-    x: 0,
-    y: 2,
-    z: -0.3,
+    x: laptopGroup.position.x,
+    y: laptopGroup.position.y + 0.5,
+    z: laptopGroup.position.z + 0.7,
     duration: 2,
     ease: 'power2.inOut'
   })
@@ -304,13 +422,52 @@ function handleResize() {
 
 function animate() {
   animationId = requestAnimationFrame(animate)
+
+  const time = performance.now()
+  const delta = (time - prevTime) / 1000
+
+  if (controls.isLocked) {
+    velocity.x -= velocity.x * 10.0 * delta
+    velocity.z -= velocity.z * 10.0 * delta
+
+    direction.z = Number(moveState.forward) - Number(moveState.backward)
+    direction.x = Number(moveState.right) - Number(moveState.left)
+    direction.normalize() // this ensures consistent movements in all directions
+
+    if (moveState.forward || moveState.backward) velocity.z -= direction.z * 400.0 * delta
+    if (moveState.left || moveState.right) velocity.x -= direction.x * 400.0 * delta
+
+    controls.moveRight(-velocity.x * delta)
+    controls.moveForward(-velocity.z * delta)
+
+    // Simple bounds checking (Room limits)
+    // Assuming room is roughly centered at 0,0 and about 10x10 units based on office scale
+    const minX = -12, maxX = 12
+    const minZ = -12, maxZ = 12
+    
+    camera.position.x = Math.max(minX, Math.min(maxX, camera.position.x))
+    camera.position.z = Math.max(minZ, Math.min(maxZ, camera.position.z))
+  }
+
+  prevTime = time
+
+  checkIntersection(delta)
   renderer.render(scene, camera)
 }
 </script>
 
 <template>
   <div ref="container" class="three-container">
-    <div class="instruction">Click the Power Button to Start</div>
+    <div class="crosshair"></div>
+    
+    <div class="intro-overlay">
+      <div class="intro-content">
+        <h1>Welcome</h1>
+        <p>Move around to turn on samacOS</p>
+        <p class="sub-text">(Click to Start)</p>
+      </div>
+    </div>
+
     <div class="overlay"></div>
   </div>
 </template>
@@ -324,6 +481,20 @@ function animate() {
   overflow: hidden;
 }
 
+.crosshair {
+  position: absolute;
+  top: 50%;
+  left: 50%;
+  width: 10px;
+  height: 10px;
+  background-color: rgba(255, 255, 255, 0.8);
+  border-radius: 50%;
+  transform: translate(-50%, -50%);
+  pointer-events: none;
+  z-index: 20;
+  border: 1px solid rgba(0, 0, 0, 0.5);
+}
+
 .overlay {
   position: absolute;
   inset: 0;
@@ -334,16 +505,48 @@ function animate() {
   transition: opacity 0.5s;
 }
 
-.instruction {
+.intro-overlay {
   position: absolute;
-  bottom: 40px;
-  left: 50%;
-  transform: translateX(-50%);
-  color: rgba(255, 255, 255, 0.5);
+  inset: 0;
+  background: rgba(0, 0, 0, 0.85);
+  display: flex;
+  justify-content: center;
+  align-items: center;
+  z-index: 30;
+  cursor: pointer;
+  backdrop-filter: blur(5px);
+  -webkit-backdrop-filter: blur(5px);
+}
+
+.intro-content {
+  text-align: center;
+  color: white;
+  font-family: -apple-system, BlinkMacSystemFont, sans-serif;
+  animation: fadeIn 1s ease-out;
+}
+
+.intro-content h1 {
+  font-size: 48px;
+  font-weight: 200;
+  margin-bottom: 16px;
+  letter-spacing: 2px;
+}
+
+.intro-content p {
+  font-size: 18px;
+  color: rgba(255, 255, 255, 0.8);
+  margin-bottom: 8px;
+  font-weight: 300;
+}
+
+.intro-content .sub-text {
   font-size: 14px;
-  user-select: none;
-  pointer-events: none;
-  z-index: 5;
-  font-family: -apple-system, BlinkMacSystemFont, system-ui, sans-serif;
+  color: rgba(255, 255, 255, 0.5);
+  margin-top: 20px;
+}
+
+@keyframes fadeIn {
+  from { opacity: 0; transform: translateY(20px); }
+  to { opacity: 1; transform: translateY(0); }
 }
 </style>

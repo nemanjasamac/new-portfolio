@@ -2,7 +2,6 @@
 import { ref, onMounted, onUnmounted } from 'vue'
 
 const emit = defineEmits(['login'])
-const password = ref('')
 const currentTime = ref('')
 const currentDate = ref('')
 const isLangMenuOpen = ref(false)
@@ -137,20 +136,8 @@ onUnmounted(() => {
       </div>
       <h2 class="user-name">Nemanja Samac</h2>
       
-      <div class="input-group">
-        <input 
-          type="password" 
-          v-model="password" 
-          placeholder="Enter Password"
-          @keyup.enter="handleLogin"
-          class="password-input"
-        />
-        <button class="login-button" @click="handleLogin" v-if="password.length > 0">
-          <svg xmlns="http://www.w3.org/2000/svg" width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
-            <line x1="5" y1="12" x2="19" y2="12"></line>
-            <polyline points="12 5 19 12 12 19"></polyline>
-          </svg>
-        </button>
+      <div class="login-actions">
+        <button class="login-btn" @click="handleLogin">Log In</button>
       </div>
     </div>
   </div>
@@ -352,51 +339,25 @@ onUnmounted(() => {
   text-shadow: 0 2px 4px rgba(0,0,0,0.3);
 }
 
-.input-group {
-  position: relative;
-  width: 180px;
+.login-actions {
+  margin-top: 10px;
 }
 
-.password-input {
-  width: 100%;
-  padding: 6px 30px 6px 12px;
+.login-btn {
+  background: rgba(255, 255, 255, 0.2);
+  border: none;
+  padding: 6px 20px;
   border-radius: 20px;
-  border: none;
-  background: rgba(0, 0, 0, 0.2);
-  backdrop-filter: blur(10px);
   color: white;
-  font-size: 0.8rem;
-  outline: none;
-  text-align: left;
-  transition: background 0.3s;
-  box-sizing: border-box;
-}
-
-.password-input::placeholder {
-  color: rgba(255, 255, 255, 0.5);
-}
-
-.password-input:focus {
-  background: rgba(0, 0, 0, 0.4);
-}
-
-.login-button {
-  position: absolute;
-  right: 4px;
-  top: 50%;
-  transform: translateY(-50%);
-  background: none;
-  border: none;
-  color: rgba(255, 255, 255, 0.6);
+  font-size: 13px;
+  font-weight: 500;
   cursor: var(--mac-cursor);
-  display: flex;
-  align-items: center;
-  justify-content: center;
-  padding: 0;
+  backdrop-filter: blur(10px);
+  transition: background 0.2s;
 }
 
-.login-button:hover {
-  color: white;
+.login-btn:hover {
+  background: rgba(255, 255, 255, 0.3);
 }
 
 .footer-text {

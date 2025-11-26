@@ -25,6 +25,17 @@ const handleLogin = () => {
   showLogin.value = false
   showDesktop.value = true
 }
+
+const handleReboot = () => {
+  showDesktop.value = false
+  showBoot.value = true
+  
+  // Simulate boot time
+  setTimeout(() => {
+    showBoot.value = false
+    showLogin.value = true
+  }, 4000)
+}
 </script>
 
 <template>
@@ -39,7 +50,7 @@ const handleLogin = () => {
   </Transition>
   
   <Transition name="fade">
-    <Desktop v-if="showDesktop" />
+    <Desktop v-if="showDesktop" @reboot="handleReboot" />
   </Transition>
 </template>
 

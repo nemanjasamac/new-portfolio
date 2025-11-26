@@ -11,6 +11,7 @@ const dockItems = ref([
   { id: 'projects', label: 'My Projects', icon: 'folder' },
   { id: 'safari', label: 'Safari', icon: 'safari' },
   { id: 'mail', label: 'Contact Me', icon: 'mail' },
+  { id: 'trash', label: 'Trash', icon: 'trash' },
 ])
 
 const hoveredIndex = ref(null)
@@ -23,6 +24,7 @@ const hoveredIndex = ref(null)
         v-for="(item, index) in dockItems" 
         :key="item.id"
         class="dock-item"
+        :class="{ 'trash-drop-zone': item.id === 'trash' }"
         @mouseenter="hoveredIndex = index"
         @mouseleave="hoveredIndex = null"
       >
@@ -71,6 +73,21 @@ const hoveredIndex = ref(null)
             <rect x="10" y="20" width="80" height="60" rx="12" fill="#2196F3"/>
             <path d="M10 28l40 30 40-30" stroke="#fff" stroke-width="4" fill="none" stroke-linecap="round" stroke-linejoin="round"/>
             <path d="M10 70l25-20M90 70l-25-20" stroke="#fff" stroke-width="4" fill="none" stroke-linecap="round"/>
+          </svg>
+
+          <!-- Trash -->
+          <svg v-if="item.icon === 'trash'" viewBox="0 0 100 100" class="icon-svg trash-icon">
+            <defs>
+              <linearGradient id="trash-grad" x1="0%" y1="0%" x2="0%" y2="100%">
+                <stop offset="0%" style="stop-color:#e6e6e6;stop-opacity:1" />
+                <stop offset="100%" style="stop-color:#b0b0b0;stop-opacity:1" />
+              </linearGradient>
+            </defs>
+            <path d="M20 25 L80 25 L75 90 L25 90 Z" fill="url(#trash-grad)" stroke="#999" stroke-width="1"/>
+            <path d="M25 25 L28 15 L72 15 L75 25" fill="#ccc" stroke="#999" stroke-width="1"/>
+            <line x1="35" y1="35" x2="35" y2="80" stroke="#999" stroke-width="2"/>
+            <line x1="50" y1="35" x2="50" y2="80" stroke="#999" stroke-width="2"/>
+            <line x1="65" y1="35" x2="65" y2="80" stroke="#999" stroke-width="2"/>
           </svg>
         </div>
         <div class="dot"></div>

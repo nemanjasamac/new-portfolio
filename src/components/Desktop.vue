@@ -1,6 +1,14 @@
 <script setup>
 import { ref, onMounted, onUnmounted, computed } from 'vue'
 import Dock from './Dock.vue'
+import PreviewWindow from './PreviewWindow.vue'
+import folderIcon from '../assets/Icons/folder.png'
+import safariIcon from '../assets/Icons/safari.svg'
+
+const emit = defineEmits(['reboot'])
+
+const isPreviewOpen = ref(false)
+const previewFile = ref({ title: '', url: '' })
 
 const currentTime = ref('')
 const currentDate = ref('')
@@ -20,7 +28,60 @@ const languages = [
   { id: 'SR', label: 'Serbian (Latin)', icon: 'SR' },
   { id: 'CP', label: 'Serbian', icon: 'CP' },
 ]
+const desktopItems = ref([])
+const isDragging = ref(false)
+const dragOffsets = ref({})
 let timer = null
+
+const createNewFolder = () => {
+  const id = Date.now()
+  desktopItems.value.push({
+    id,
+    type: 'folder',
+    name: 'New Folder',
+    x: contextMenuX.value,
+    y: contextMenuY.value,
+    selected: false,
+    deletable: true
+  })
+  isContextMenuOpen.value = false
+}
+
+const openItem = (item) => {
+  if (item.type === 'resume') {
+    previewFile.value = {
+      title: 'Nemanja Samac CV.pdf',
+      url: '/Nemanja Samac CV.pdf'
+    }
+    isPreviewOpen.value = true
+  }
+}
+
+const handleItemMouseDown = (e, item) => {
+  // Handle selection logic
+  if (e.shiftKey || e.metaKey || e.ctrlKey) {
+    item.selected = !item.selected
+  } else {
+    if (!item.selected) {
+      desktopItems.value.forEach(i => i.selected = false)
+      item.selected = true
+    }
+  }
+  
+  // Start dragging if selected
+  if (item.selected) {
+    isDragging.value = true
+    dragOffsets.value = {}
+    
+    // Calculate offsets for all selected items
+    desktopItems.value.filter(i => i.selected).forEach(i => {
+      dragOffsets.value[i.id] = {
+        x: e.clientX - i.x,
+        y: e.clientY - i.y
+      }
+    })
+  }
+}
 
 const updateTime = () => {
   const now = new Date()
@@ -84,6 +145,9 @@ const handleMouseDown = (e) => {
   if (!e.target.classList.contains('desktop-container') && 
       !e.target.classList.contains('desktop-content')) return
       
+  // Deselect all items
+  desktopItems.value.forEach(i => i.selected = false)
+
   isSelecting.value = true
   selectionStart.value = { x: e.clientX, y: e.clientY }
   selectionCurrent.value = { x: e.clientX, y: e.clientY }
@@ -96,12 +160,70 @@ const handleMouseDown = (e) => {
 }
 
 const handleMouseMove = (e) => {
-  if (!isSelecting.value) return
-  selectionCurrent.value = { x: e.clientX, y: e.clientY }
+  if (isDragging.value) {
+    desktopItems.value.filter(i => i.selected).forEach(i => {
+      const offset = dragOffsets.value[i.id]
+      if (offset) {
+        i.x = e.clientX - offset.x
+        i.y = e.clientY - offset.y
+      }
+    })
+    return
+  }
+
+  if (isSelecting.value) {
+    selectionCurrent.value = { x: e.clientX, y: e.clientY }
+    updateSelection()
+  }
 }
 
-const handleMouseUp = () => {
+const updateSelection = () => {
+  const left = Math.min(selectionStart.value.x, selectionCurrent.value.x)
+  const top = Math.min(selectionStart.value.y, selectionCurrent.value.y)
+  const right = Math.max(selectionStart.value.x, selectionCurrent.value.x)
+  const bottom = Math.max(selectionStart.value.y, selectionCurrent.value.y)
+
+  desktopItems.value.forEach(item => {
+    // Item bounds (approximate)
+    const itemLeft = item.x
+    const itemRight = item.x + 80
+    const itemTop = item.y
+    const itemBottom = item.y + 90
+
+    const isIntersecting = !(itemLeft > right || 
+                           itemRight < left || 
+                           itemTop > bottom || 
+                           itemBottom < top)
+    
+    item.selected = isIntersecting
+  })
+}
+
+const handleMouseUp = (e) => {
+  if (isDragging.value) {
+    // Check if dropped on trash
+    const trashEl = document.querySelector('.trash-drop-zone')
+    if (trashEl) {
+      const rect = trashEl.getBoundingClientRect()
+      // Check if mouse is within trash bounds
+      if (e.clientX >= rect.left && e.clientX <= rect.right &&
+          e.clientY >= rect.top && e.clientY <= rect.bottom) {
+        
+        // Remove deletable items
+        desktopItems.value = desktopItems.value.filter(item => {
+          // If selected and deletable, remove it (return false)
+          if (item.selected && item.deletable) {
+            return false
+          }
+          return true
+        })
+      }
+    }
+  }
+
   isSelecting.value = false
+  isDragging.value = false
+  dragOffsets.value = {}
 }
 
 const selectionBoxStyle = computed(() => {
@@ -124,7 +246,7 @@ const selectLang = (lang) => {
 }
 
 const reloadPage = () => {
-    location.reload()
+    emit('reboot')
 }
 
 const shutDown = () => {
@@ -150,6 +272,58 @@ onMounted(() => {
       isContextMenuOpen.value = false
     }
   })
+
+  // Add default items
+  if (desktopItems.value.length === 0) {
+    const rightX = window.innerWidth - 100
+    desktopItems.value.push(
+      {
+        id: 'about',
+        type: 'about-me',
+        name: 'About Me',
+        x: rightX,
+        y: 40,
+        selected: false,
+        deletable: false
+      },
+      {
+        id: 'portfolio',
+        type: 'folder',
+        name: 'My Projects',
+        x: rightX,
+        y: 140,
+        selected: false,
+        deletable: false
+      },
+      {
+        id: 'safari',
+        type: 'safari',
+        name: 'Safari',
+        x: rightX,
+        y: 240,
+        selected: false,
+        deletable: false
+      },
+      {
+        id: 'resume',
+        type: 'resume',
+        name: 'My Resume',
+        x: rightX,
+        y: 340,
+        selected: false,
+        deletable: false
+      },
+      {
+        id: 'contact',
+        type: 'contact-me',
+        name: 'Contact Me',
+        x: rightX,
+        y: 440,
+        selected: false,
+        deletable: false
+      }
+    )
+  }
 })
 
 onUnmounted(() => {
@@ -179,7 +353,7 @@ onUnmounted(() => {
       class="context-menu"
       :style="{ top: `${contextMenuY}px`, left: `${contextMenuX}px` }"
     >
-      <div class="menu-item-row">
+      <div class="menu-item-row" @click="createNewFolder">
         <div class="menu-label">New Folder</div>
       </div>
       
@@ -498,7 +672,81 @@ onUnmounted(() => {
     
     <!-- Desktop Content Area -->
     <div class="desktop-content" @mousedown="handleMouseDown" @mousemove="handleMouseMove" @mouseup="handleMouseUp">
+      <!-- Windows -->
+      <PreviewWindow 
+        v-if="isPreviewOpen"
+        :title="previewFile.title"
+        :file-url="previewFile.url"
+        @close="isPreviewOpen = false"
+      />
+
       <!-- Windows and icons will go here -->
+      <div 
+        v-for="item in desktopItems" 
+        :key="item.id"
+        class="desktop-item"
+        :class="{ selected: item.selected }"
+        :style="{ left: `${item.x}px`, top: `${item.y}px` }"
+        @mousedown.stop="handleItemMouseDown($event, item)"
+        @dblclick="openItem(item)"
+      >
+        <div class="item-icon">
+          <img v-if="item.type === 'folder'" :src="folderIcon" width="50" height="50" draggable="false" />
+          
+          <!-- About Me -->
+          <svg v-else-if="item.type === 'about-me'" viewBox="0 0 100 100" width="50" height="50">
+            <rect x="5" y="5" width="90" height="90" rx="22" fill="#ececec"/>
+            <rect x="5" y="5" width="90" height="90" rx="22" fill="url(#finder-grad)" fill-opacity="0.8"/>
+            <path d="M50 94c24.3 0 44-19.7 44-44S74.3 6 50 6 6 25.7 6 50s19.7 44 44 44z" fill="none"/>
+            <path d="M28 35c0-5 8-8 22-8s22 3 22 8v30c0 15-44 15-44 0V35z" fill="#007AFF" opacity="0.1"/>
+            <path d="M33 32c0 0 5-4 17-4s17 4 17 4" stroke="#333" stroke-width="3" stroke-linecap="round" fill="none"/>
+            <path d="M33 45c0 0 5 5 17 5s17-5 17-5" stroke="#333" stroke-width="3" stroke-linecap="round" fill="none"/>
+            <line x1="50" y1="45" x2="50" y2="58" stroke="#333" stroke-width="3" stroke-linecap="round"/>
+            <defs>
+              <linearGradient id="finder-grad" x1="0%" y1="0%" x2="0%" y2="100%">
+                <stop offset="0%" style="stop-color:#f9f9f9;stop-opacity:1" />
+                <stop offset="100%" style="stop-color:#c7c7c7;stop-opacity:1" />
+              </linearGradient>
+            </defs>
+          </svg>
+
+          <!-- Safari -->
+          <img v-else-if="item.type === 'safari'" :src="safariIcon" width="50" height="50" draggable="false" />
+
+          <!-- Resume -->
+          <svg v-else-if="item.type === 'resume'" viewBox="0 0 100 100" width="50" height="50">
+            <rect x="15" y="5" width="70" height="90" rx="8" fill="#fff"/>
+            <path d="M15 25h70" stroke="#ddd" stroke-width="1"/>
+            <rect x="25" y="35" width="50" height="4" rx="2" fill="#e0e0e0"/>
+            <rect x="25" y="45" width="50" height="4" rx="2" fill="#e0e0e0"/>
+            <rect x="25" y="55" width="35" height="4" rx="2" fill="#e0e0e0"/>
+            <rect x="25" y="70" width="50" height="4" rx="2" fill="#e0e0e0"/>
+            <rect x="25" y="80" width="40" height="4" rx="2" fill="#e0e0e0"/>
+            <circle cx="70" cy="20" r="8" fill="#FF9500"/>
+          </svg>
+
+          <!-- Contact Me -->
+          <svg v-else-if="item.type === 'contact-me'" viewBox="0 0 100 100" width="50" height="50">
+            <rect x="10" y="20" width="80" height="60" rx="12" fill="#2196F3"/>
+            <path d="M10 28l40 30 40-30" stroke="#fff" stroke-width="4" fill="none" stroke-linecap="round" stroke-linejoin="round"/>
+            <path d="M10 70l25-20M90 70l-25-20" stroke="#fff" stroke-width="4" fill="none" stroke-linecap="round"/>
+          </svg>
+
+          <svg v-else-if="item.type === 'drive'" viewBox="0 0 100 100" width="50" height="50">
+            <rect x="15" y="35" width="70" height="40" rx="5" fill="#ccc" stroke="#999" stroke-width="2"/>
+            <rect x="20" y="60" width="60" height="5" fill="#999"/>
+            <circle cx="80" cy="45" r="3" fill="#0f0"/>
+          </svg>
+          <svg v-else-if="item.type === 'file'" viewBox="0 0 100 100" width="50" height="50">
+            <path d="M25 10 L60 10 L75 25 L75 90 L25 90 Z" fill="white" stroke="#ccc" stroke-width="2"/>
+            <path d="M60 10 L60 25 L75 25" fill="#eee" stroke="#ccc" stroke-width="2"/>
+            <line x1="35" y1="40" x2="65" y2="40" stroke="#ccc" stroke-width="2"/>
+            <line x1="35" y1="50" x2="65" y2="50" stroke="#ccc" stroke-width="2"/>
+            <line x1="35" y1="60" x2="65" y2="60" stroke="#ccc" stroke-width="2"/>
+          </svg>
+        </div>
+        <div class="item-name">{{ item.name }}</div>
+      </div>
 
       <!-- Selection Box -->
       <div v-if="isSelecting" class="selection-box" :style="selectionBoxStyle"></div>
@@ -510,6 +758,10 @@ onUnmounted(() => {
 </template>
 
 <style scoped>
+*{
+  user-select: none;
+}
+
 .desktop-container {
   width: 100vw;
   height: 100vh;
@@ -533,6 +785,7 @@ onUnmounted(() => {
   font-size: 13px;
   user-select: none;
   z-index: 1000;
+  position: relative;
 }
 
 .left-menu, .right-menu {
@@ -627,7 +880,7 @@ onUnmounted(() => {
   border-radius: 10px;
   padding: 5px;
   box-shadow: 0 0 0 1px rgba(255,255,255,0.1), 0 15px 30px rgba(0,0,0,0.4);
-  z-index: 200;
+  z-index: 11000;
   display: flex;
   flex-direction: column;
 }
@@ -858,5 +1111,48 @@ onUnmounted(() => {
   border-radius: 4px;
   pointer-events: none;
   z-index: 100;
+}
+
+.desktop-item {
+  position: absolute;
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  width: 80px;
+  padding: 5px;
+  border-radius: 5px;
+  cursor: var(--mac-cursor);
+  border: 1px solid transparent;
+}
+
+.desktop-item.selected {
+  background: rgba(255, 255, 255, 0.15);
+  border: 1px solid rgba(255, 255, 255, 0.3);
+}
+
+.desktop-item.selected .item-icon {
+  background: transparent;
+  border: none;
+}
+
+.item-icon {
+  margin-bottom: 4px;
+  filter: drop-shadow(0 2px 4px rgba(0,0,0,0.3));
+}
+
+.item-name {
+  color: white;
+  font-size: 12px;
+  text-align: center;
+  text-shadow: 0 1px 2px rgba(0,0,0,0.8);
+  word-break: break-word;
+  line-height: 1.2;
+  padding: 2px 4px;
+  border-radius: 3px;
+}
+
+.desktop-item.selected .item-name {
+  background: #0058d0;
+  color: white;
 }
 </style>
