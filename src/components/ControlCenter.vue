@@ -1,8 +1,13 @@
 <script setup>
-import { ref, computed, onUnmounted } from 'vue'
+import { ref, computed, onUnmounted, watch } from 'vue'
 import bluetoothOnIcon from '../assets/Icons/bluetooth-on.svg'
 import bluetoothOffIcon from '../assets/Icons/bluetooth-off.svg'
 import airdropIcon from '../assets/Icons/airdrop.svg'
+
+import cheriSong from '../assets/music/cheri cheri.mp3'
+import neverGonnaSong from '../assets/music/never gonna give you up.mp3'
+import cheriCover from '../assets/music_thumbnails/cheri cheri.avif'
+import neverGonnaCover from '../assets/music_thumbnails/never gonna.avif'
 
 const props = defineProps({
   isOpen: Boolean
@@ -24,22 +29,33 @@ const songs = [
   {
     title: 'Never Gonna Give You Up',
     artist: 'Rick Astley',
-    url: 'https://ia800905.us.archive.org/19/items/Rick_Astley_Never_Gonna_Give_You_Up/Rick_Astley_Never_Gonna_Give_You_Up.mp3',
-    cover: 'https://i.scdn.co/image/ab67616d0000b2735755e164993798e0c9ef7d7a'
+    url: neverGonnaSong,
+    cover: neverGonnaCover
   },
   {
-    title: 'Lofi Study',
-    artist: 'FASSounds',
-    url: 'https://cdn.pixabay.com/download/audio/2022/05/27/audio_1808fbf07a.mp3?filename=lofi-study-112191.mp3',
-    cover: 'https://cdn.pixabay.com/audio/2022/05/27/11-21-56-507_200x200.jpg'
+    title: 'Cheri Cheri Lady',
+    artist: 'Modern Talking',
+    url: cheriSong,
+    cover: cheriCover
   }
 ]
 
 const currentSongIndex = ref(0)
 const isPlaying = ref(false)
 const audio = new Audio(songs[0].url)
+audio.volume = volume.value / 100
 
 const currentSong = computed(() => songs[currentSongIndex.value])
+
+// Watchers for sliders
+watch(volume, (newVal) => {
+  audio.volume = newVal / 100
+})
+
+watch(brightness, (newVal) => {
+  document.getElementById('app').style.filter = `brightness(${newVal}%)`
+  document.getElementById('app').style.transition = 'filter 0.1s ease'
+}, { immediate: true })
 
 const togglePlay = () => {
   if (isPlaying.value) {
@@ -174,7 +190,7 @@ onUnmounted(() => {
                 <div class="slider-icon-container">
                     <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="#666" stroke-width="2"><circle cx="12" cy="12" r="5"/><line x1="12" y1="1" x2="12" y2="3"/><line x1="12" y1="21" x2="12" y2="23"/><line x1="4.22" y1="4.22" x2="5.64" y2="5.64"/><line x1="18.36" y1="18.36" x2="19.78" y2="19.78"/><line x1="1" y1="12" x2="3" y2="12"/><line x1="21" y1="12" x2="23" y2="12"/><line x1="4.22" y1="19.78" x2="5.64" y2="18.36"/><line x1="18.36" y1="5.64" x2="19.78" y2="4.22"/></svg>
                 </div>
-                <input type="range" v-model="brightness" min="0" max="100" class="slider display-slider" :style="{ '--val': brightness + '%' }">
+                <input type="range" v-model="brightness" min="10" max="100" class="slider display-slider" :style="{ '--val': brightness + '%' }">
             </div>
         </div>
 

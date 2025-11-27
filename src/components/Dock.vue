@@ -3,15 +3,22 @@ import { ref } from 'vue'
 import safariIcon from '../assets/Icons/safari.svg'
 import folderIcon from '../assets/Icons/folder.png'
 import finderIcon from '../assets/Icons/finder.png'
+import launchpadIcon from '../assets/Icons/launchpad.png'
+import mailIcon from '../assets/Icons/mail.svg'
+import notesIcon from '../assets/Icons/apple-notes.svg'
+import mapsIcon from '../assets/Icons/apple-maps.webp'
 
 const dockItems = ref([
   { id: 'finder-app', label: 'Finder', icon: 'finder-app' },
+  { id: 'launchpad', label: 'Launchpad', icon: 'launchpad' },
   { id: 'finder', label: 'About Me', icon: 'finder' },
   { id: 'resume', label: 'My Resume', icon: 'resume' },
   { id: 'projects', label: 'My Projects', icon: 'folder' },
   { id: 'terminal', label: 'Terminal', icon: 'terminal' },
   { id: 'safari', label: 'Safari', icon: 'safari' },
   { id: 'mail', label: 'Contact Me', icon: 'mail' },
+  { id: 'notes', label: 'Notes', icon: 'notes' },
+  { id: 'maps', label: 'Maps', icon: 'maps' },
   { id: 'trash', label: 'Trash', icon: 'trash' },
 ])
 
@@ -36,6 +43,9 @@ const hoveredIndex = ref(null)
         <div class="app-icon">
           <!-- Finder App -->
           <img v-if="item.icon === 'finder-app'" :src="finderIcon" class="icon-img" alt="Finder" />
+
+          <!-- Launchpad -->
+          <img v-if="item.icon === 'launchpad'" :src="launchpadIcon" class="icon-img" alt="Launchpad" />
 
           <!-- Finder / About Me -->
           <svg v-if="item.icon === 'finder'" viewBox="0 0 100 100" class="icon-svg">
@@ -86,11 +96,13 @@ const hoveredIndex = ref(null)
           <img v-if="item.icon === 'safari'" :src="safariIcon" class="icon-img" alt="Safari" />
 
           <!-- Mail -->
-          <svg v-if="item.icon === 'mail'" viewBox="0 0 100 100" class="icon-svg">
-            <rect x="10" y="20" width="80" height="60" rx="12" fill="#2196F3"/>
-            <path d="M10 28l40 30 40-30" stroke="#fff" stroke-width="4" fill="none" stroke-linecap="round" stroke-linejoin="round"/>
-            <path d="M10 70l25-20M90 70l-25-20" stroke="#fff" stroke-width="4" fill="none" stroke-linecap="round"/>
-          </svg>
+          <img v-if="item.icon === 'mail'" :src="mailIcon" class="icon-img" alt="Mail" />
+
+          <!-- Notes -->
+          <img v-if="item.icon === 'notes'" :src="notesIcon" class="icon-img" alt="Notes" />
+
+          <!-- Maps -->
+          <img v-if="item.icon === 'maps'" :src="mapsIcon" class="icon-img" alt="Maps" />
 
           <!-- Trash -->
           <svg v-if="item.icon === 'trash'" viewBox="0 0 100 100" class="icon-svg trash-icon">

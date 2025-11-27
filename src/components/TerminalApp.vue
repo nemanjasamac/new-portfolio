@@ -28,7 +28,7 @@ const preMaximizeState = ref({ x: 0, y: 0 })
 
 const history = ref([
   { type: 'output', content: 'Last login: ' + new Date().toString().split('GMT')[0] + ' on ttys000' },
-  { type: 'output', content: 'Welcome to NemanjaOS Terminal. Type "help" for a list of commands.' }
+  { type: 'output', content: 'Welcome to samacOS Terminal. Type "help" for a list of commands.' }
 ])
 const currentInput = ref('')
 const commandHistory = ref([])

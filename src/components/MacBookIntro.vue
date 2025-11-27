@@ -65,7 +65,9 @@ function init() {
     0.1,
     1000
   )
-  camera.position.set(-2, 1.6, 4) // Lower and closer
+  camera.position.set(20, 1.6, 0) // Moved to the right
+
+  camera.lookAt(0, -2, 0)
 
   // Controls
   controls = new PointerLockControls(camera, document.body)
@@ -196,8 +198,8 @@ function init() {
   laptopGroup.rotation.y = -Math.PI / 2
   scene.add(laptopGroup)
 
-  // Camera LookAt
-  camera.lookAt(0, 0.5, 0)
+  // Camera LookAt removed to respect initial rotation
+  // camera.lookAt(0, 0.5, 0)
 
   // Load GLB Model
   loader.load(macbookUrl, (gltf) => {
@@ -442,8 +444,8 @@ function animate() {
 
     // Simple bounds checking (Room limits)
     // Assuming room is roughly centered at 0,0 and about 10x10 units based on office scale
-    const minX = -12, maxX = 12
-    const minZ = -12, maxZ = 12
+    const minX = -20, maxX = 20
+    const minZ = -20, maxZ = 20
     
     camera.position.x = Math.max(minX, Math.min(maxX, camera.position.x))
     camera.position.z = Math.max(minZ, Math.min(maxZ, camera.position.z))

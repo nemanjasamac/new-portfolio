@@ -6,8 +6,15 @@ import AboutMeApp from './AboutMeApp.vue'
 import ProjectWindow from './ProjectWindow.vue'
 import TerminalApp from './TerminalApp.vue'
 import ControlCenter from './ControlCenter.vue'
+import SystemSettings from './SystemSettings.vue'
+import ContactApp from './ContactApp.vue'
+import Launchpad from './Launchpad.vue'
+import CalculatorApp from './CalculatorApp.vue'
+import NotesApp from './NotesApp.vue'
+import MapsApp from './MapsApp.vue'
 import folderIcon from '../assets/Icons/folder.png'
 import safariIcon from '../assets/Icons/safari.svg'
+import mailIcon from '../assets/Icons/mail.svg'
 
 const emit = defineEmits(['reboot'])
 
@@ -15,6 +22,13 @@ const isPreviewOpen = ref(false)
 const isAboutMeOpen = ref(false)
 const isTerminalOpen = ref(false)
 const isControlCenterOpen = ref(false)
+const isSystemSettingsOpen = ref(false)
+const isContactOpen = ref(false)
+const isLaunchpadOpen = ref(false)
+const isCalculatorOpen = ref(false)
+const isNotesOpen = ref(false)
+const isMapsOpen = ref(false)
+const currentWallpaper = ref('/wallpaper.jpg')
 const aboutMeInitialSection = ref('about')
 const openProjects = ref([])
 const previewFile = ref({ title: '', url: '' })
@@ -79,14 +93,34 @@ const languages = [
   { id: 'SR', label: 'Serbian (Latin)', icon: 'SR' },
   { id: 'CP', label: 'Serbian', icon: 'CP' },
 ]
-const desktopItems = ref([
-  { id: 'about-me', type: 'about-me', name: 'About Me', x: 20, y: 20, selected: false },
-  { id: 'resume', type: 'resume', name: 'My Resume', x: 20, y: 110, selected: false },
-  { id: 'projects-folder', type: 'projects-folder', name: 'My Projects', x: 20, y: 200, selected: false },
-])
+const desktopItems = ref([])
 const isDragging = ref(false)
 const dragOffsets = ref({})
 let timer = null
+
+// Easter Egg State
+const showBSOD = ref(false)
+const konamiCode = ['ArrowUp', 'ArrowUp', 'ArrowDown', 'ArrowDown', 'ArrowLeft', 'ArrowRight', 'ArrowLeft', 'ArrowRight', 'b', 'a']
+const inputSequence = ref([])
+
+const handleKeydown = (e) => {
+  inputSequence.value.push(e.key)
+  if (inputSequence.value.length > konamiCode.length) {
+    inputSequence.value.shift()
+  }
+  
+  if (JSON.stringify(inputSequence.value) === JSON.stringify(konamiCode)) {
+    triggerBSOD()
+    inputSequence.value = []
+  }
+}
+
+const triggerBSOD = () => {
+  showBSOD.value = true
+  setTimeout(() => {
+    showBSOD.value = false
+  }, 5000)
+}
 
 const createNewFolder = () => {
   const id = Date.now()
@@ -141,20 +175,13 @@ const openItem = (item) => {
   } else if (item.type === 'projects-folder') {
     aboutMeInitialSection.value = 'projects'
     isAboutMeOpen.value = true
+  } else if (item.type === 'contact-me') {
+    isContactOpen.value = true
   }
 }
 
 const handleOpenApp = (appId) => {
-  if (appId === 'resume') {
-    previewFile.value = {
-      title: 'Nemanja Samac CV.pdf',
-      url: '/Nemanja Samac CV.pdf'
-    }
-    isPreviewOpen.value = true
-  } else if (appId === 'about-me') {
-    aboutMeInitialSection.value = 'about'
-    isAboutMeOpen.value = true
-  }
+  handleDockClick(appId)
 }
 
 const handleDockClick = (id) => {
@@ -164,11 +191,26 @@ const handleDockClick = (id) => {
       url: '/Nemanja Samac CV.pdf'
     }
     isPreviewOpen.value = true
-  } else if (id === 'finder') {
+  } else if (id === 'finder' || id === 'finder-app') {
     aboutMeInitialSection.value = 'about'
+    isAboutMeOpen.value = true
+  } else if (id === 'projects') {
+    aboutMeInitialSection.value = 'projects'
     isAboutMeOpen.value = true
   } else if (id === 'terminal') {
     isTerminalOpen.value = !isTerminalOpen.value
+  } else if (id === 'launchpad') {
+    isLaunchpadOpen.value = !isLaunchpadOpen.value
+  } else if (id === 'mail') {
+    isContactOpen.value = true
+  } else if (id === 'settings') {
+    isSystemSettingsOpen.value = true
+  } else if (id === 'calculator') {
+    isCalculatorOpen.value = true
+  } else if (id === 'notes') {
+    isNotesOpen.value = true
+  } else if (id === 'maps') {
+    isMapsOpen.value = true
   }
 }
 
@@ -247,8 +289,23 @@ const handleContextMenu = (e) => {
   isFinderMenuOpen.value = false
   isAppleMenuOpen.value = false
   
-  contextMenuX.value = e.clientX
-  contextMenuY.value = e.clientY
+  // Prevent overflow
+  const menuWidth = 220
+  const menuHeight = 320
+  
+  let x = e.clientX
+  let y = e.clientY
+  
+  if (x + menuWidth > window.innerWidth) {
+    x = window.innerWidth - menuWidth - 10
+  }
+  
+  if (y + menuHeight > window.innerHeight) {
+    y = window.innerHeight - menuHeight - 10
+  }
+  
+  contextMenuX.value = x
+  contextMenuY.value = y
 }
 
 const closeContextMenu = () => {
@@ -369,6 +426,9 @@ const shutDown = () => {
 }
 
 onMounted(() => {
+  window.addEventListener('keydown', handleKeydown)
+  console.log('%c Looking for secrets? Try the Konami Code! ', 'background: #222; color: #bada55; font-size: 14px; padding: 4px;')
+  
   updateTime()
   timer = setInterval(updateTime, 1000)
   
@@ -389,59 +449,65 @@ onMounted(() => {
   })
 
   // Add default items
-  if (desktopItems.value.length === 0) {
-    const rightX = window.innerWidth - 100
-    desktopItems.value.push(
-      {
-        id: 'about',
-        type: 'about-me',
-        name: 'About Me',
-        x: rightX,
-        y: 40,
-        selected: false,
-        deletable: false
-      },
-      {
-        id: 'portfolio',
-        type: 'folder',
-        name: 'My Projects',
-        x: rightX,
-        y: 140,
-        selected: false,
-        deletable: false
-      },
-      {
-        id: 'safari',
-        type: 'safari',
-        name: 'Safari',
-        x: rightX,
-        y: 240,
-        selected: false,
-        deletable: false
-      },
-      {
-        id: 'resume',
-        type: 'resume',
-        name: 'My Resume',
-        x: rightX,
-        y: 340,
-        selected: false,
-        deletable: false
-      },
-      {
-        id: 'contact',
-        type: 'contact-me',
-        name: 'Contact Me',
-        x: rightX,
-        y: 440,
-        selected: false,
-        deletable: false
-      }
-    )
-  }
+  const leftX = 20
+  
+  const defaultItems = [
+    {
+      id: 'about-me',
+      type: 'about-me',
+      name: 'About Me',
+      x: leftX,
+      y: 20,
+      selected: false,
+      deletable: false
+    },
+    {
+      id: 'projects-folder',
+      type: 'projects-folder',
+      name: 'My Projects',
+      x: leftX,
+      y: 110,
+      selected: false,
+      deletable: false
+    },
+    {
+      id: 'safari',
+      type: 'safari',
+      name: 'Safari',
+      x: leftX,
+      y: 200,
+      selected: false,
+      deletable: false
+    },
+    {
+      id: 'resume',
+      type: 'resume',
+      name: 'My Resume',
+      x: leftX,
+      y: 290,
+      selected: false,
+      deletable: false
+    },
+    {
+      id: 'contact-me',
+      type: 'contact-me',
+      name: 'Contact Me',
+      x: leftX,
+      y: 380,
+      selected: false,
+      deletable: false
+    }
+  ]
+
+  defaultItems.forEach(item => {
+    if (!desktopItems.value.find(i => i.id === item.id)) {
+      desktopItems.value.push(item)
+    }
+  })
 })
 
 onUnmounted(() => {
+  window.removeEventListener('keydown', handleKeydown)
   if (timer) clearInterval(timer)
 })
 </script>
@@ -449,12 +515,44 @@ onUnmounted(() => {
 <template>
   <div 
     class="desktop-container" 
+    :style="{ backgroundImage: `url('${currentWallpaper}')` }"
     @contextmenu="handleContextMenu" 
     @click="closeContextMenu"
     @mousedown="handleMouseDown"
     @mousemove="handleMouseMove"
     @mouseup="handleMouseUp"
   >
+    <!-- BSOD Easter Egg -->
+    <div v-if="showBSOD" class="bsod-overlay">
+        <div class="bsod-content">
+            <div class="sad-face">:(</div>
+            <div class="bsod-text">
+                Your PC ran into a problem and needs to restart. We're just collecting some error info, and then we'll restart for you.
+            </div>
+            <div class="bsod-progress">20% complete</div>
+            <div class="bsod-details">
+                <div class="qr-code">
+                    <svg viewBox="0 0 100 100" width="100" height="100" fill="white">
+                        <rect x="10" y="10" width="30" height="30"/>
+                        <rect x="60" y="10" width="30" height="30"/>
+                        <rect x="10" y="60" width="30" height="30"/>
+                        <rect x="50" y="50" width="10" height="10"/>
+                        <rect x="70" y="70" width="10" height="10"/>
+                        <rect x="50" y="70" width="10" height="10"/>
+                        <rect x="70" y="50" width="10" height="10"/>
+                    </svg>
+                </div>
+                <div class="stop-code">
+                    For more information about this issue and possible fixes, visit https://www.windows.com/stopcode
+                    <br><br>
+                    If you call a support person, give them this info:
+                    <br>
+                    Stop code: CRITICAL_PROCESS_DIED
+                </div>
+            </div>
+        </div>
+    </div>
+
     <!-- Selection Box -->
     <div 
       v-if="isSelecting" 
@@ -477,19 +575,19 @@ onUnmounted(() => {
       <div class="menu-item-row">
         <div class="menu-label">Get Info</div>
       </div>
-      <div class="menu-item-row">
+      <div class="menu-item-row" @click="isSystemSettingsOpen = true; isContextMenuOpen = false">
         <div class="menu-label">Change Wallpaper...</div>
       </div>
-      <div class="menu-item-row">
+      <div class="menu-item-row disabled">
         <div class="menu-label">Edit Widgets...</div>
       </div>
       
       <div class="menu-separator"></div>
       
-      <div class="menu-item-row">
+      <div class="menu-item-row disabled">
         <div class="menu-label">Use Stacks</div>
       </div>
-      <div class="menu-item-row has-submenu">
+      <div class="menu-item-row disabled">
         <div class="menu-label">Sort By</div>
         <div class="submenu-arrow">›</div>
         <div class="submenu">
@@ -519,7 +617,7 @@ onUnmounted(() => {
           </div>
         </div>
       </div>
-      <div class="menu-item-row">
+      <div class="menu-item-row disabled">
         <div class="menu-label">Clean Up</div>
       </div>
       <div class="menu-item-row disabled">
@@ -545,7 +643,7 @@ onUnmounted(() => {
               <span class="menu-label">About samacOS</span>
             </div>
             <div class="menu-separator"></div>
-            <div class="menu-item-row">
+            <div class="menu-item-row" @click="isSystemSettingsOpen = true; isAppleMenuOpen = false">
               <span class="menu-icon-small">
                 <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><circle cx="12" cy="12" r="3"></circle><path d="M19.4 15a1.65 1.65 0 0 0 .33 1.82l.06.06a2 2 0 0 1 0 2.83 2 2 0 0 1-2.83 0l-.06-.06a1.65 1.65 0 0 0-1.82-.33 1.65 1.65 0 0 0-1 1.51V21a2 2 0 0 1-2 2 2 2 0 0 1-2-2v-.09A1.65 1.65 0 0 0 9 19.4a1.65 1.65 0 0 0-1.82.33l-.06.06a2 2 0 0 1-2.83 0 2 2 0 0 1 0-2.83l.06.06a1.65 1.65 0 0 0 .33-1.82 1.65 1.65 0 0 0-1.51-1H3a2 2 0 0 1-2-2 2 2 0 0 1 2-2h.09A1.65 1.65 0 0 0 4.6 9a1.65 1.65 0 0 0-.33-1.82l-.06-.06a2 2 0 0 1 0-2.83 2 2 0 0 1 2.83 0l.06.06a1.65 1.65 0 0 0 1.82.33H9a1.65 1.65 0 0 0 1-1.51V3a2 2 0 0 1 2-2 2 2 0 0 1 2 2v.09a1.65 1.65 0 0 0 1 1.51 1.65 1.65 0 0 0 1.82-.33l.06-.06a2 2 0 0 1 2.83 0 2 2 0 0 1 0 2.83l-.06.06a1.65 1.65 0 0 0-.33 1.82V9a1.65 1.65 0 0 0 1.51 1H21a2 2 0 0 1 2 2 2 2 0 0 1-2 2h-.09a1.65 1.65 0 0 0-1.51 1z"></path></svg>
               </span>
@@ -810,6 +908,18 @@ onUnmounted(() => {
         @open-app="handleOpenApp"
       />
 
+      <SystemSettings 
+        :is-open="isSystemSettingsOpen"
+        :current-wallpaper="currentWallpaper"
+        @close="isSystemSettingsOpen = false"
+        @change-wallpaper="(url) => currentWallpaper = url"
+      />
+
+      <ContactApp
+        :is-open="isContactOpen"
+        @close="isContactOpen = false"
+      />
+
       <ProjectWindow
         v-for="project in openProjects"
         :key="project.id"
@@ -867,11 +977,7 @@ onUnmounted(() => {
           </svg>
 
           <!-- Contact Me -->
-          <svg v-else-if="item.type === 'contact-me'" viewBox="0 0 100 100" width="50" height="50">
-            <rect x="10" y="20" width="80" height="60" rx="12" fill="#2196F3"/>
-            <path d="M10 28l40 30 40-30" stroke="#fff" stroke-width="4" fill="none" stroke-linecap="round" stroke-linejoin="round"/>
-            <path d="M10 70l25-20M90 70l-25-20" stroke="#fff" stroke-width="4" fill="none" stroke-linecap="round"/>
-          </svg>
+          <img v-else-if="item.type === 'contact-me'" :src="mailIcon" width="50" height="50" draggable="false" />
 
           <svg v-else-if="item.type === 'drive'" viewBox="0 0 100 100" width="50" height="50">
             <rect x="15" y="35" width="70" height="40" rx="5" fill="#ccc" stroke="#999" stroke-width="2"/>
@@ -893,6 +999,35 @@ onUnmounted(() => {
       <div v-if="isSelecting" class="selection-box" :style="selectionBoxStyle"></div>
     </div>
 
+    <!-- Launchpad -->
+    <Transition name="launchpad">
+      <Launchpad v-if="isLaunchpadOpen" :is-open="isLaunchpadOpen" @close="isLaunchpadOpen = false" @open-app="handleDockClick" />
+    </Transition>
+
+    <!-- Calculator App -->
+    <CalculatorApp 
+      :is-open="isCalculatorOpen" 
+      :z-index="200"
+      @close="isCalculatorOpen = false"
+      @focus="() => {}"
+    />
+
+    <!-- Notes App -->
+    <NotesApp 
+      :is-open="isNotesOpen" 
+      :z-index="200"
+      @close="isNotesOpen = false"
+      @focus="() => {}"
+    />
+
+    <!-- Maps App -->
+    <MapsApp 
+      :is-open="isMapsOpen" 
+      :z-index="200"
+      @close="isMapsOpen = false"
+      @focus="() => {}"
+    />
+
     <!-- Dock Component -->
     <Dock @open-app="handleDockClick" />
   </div>
@@ -906,10 +1041,12 @@ onUnmounted(() => {
 .desktop-container {
   width: 100vw;
   height: 100vh;
-  background: url('/wallpaper.jpg') no-repeat center center;
+  background-repeat: no-repeat;
+  background-position: center center;
   background-size: cover;
   overflow: hidden;
   position: relative;
+  transition: background-image 0.5s ease-in-out;
 }
 
 .menu-bar {
@@ -1237,6 +1374,56 @@ onUnmounted(() => {
   flex-direction: column;
 }
 
+/* BSOD Styles */
+.bsod-overlay {
+    position: fixed;
+    top: 0;
+    left: 0;
+    right: 0;
+    bottom: 0;
+    background: #0078D7;
+    z-index: 999999;
+    color: white;
+    font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif;
+    display: flex;
+    align-items: center;
+    padding-left: 15%;
+    cursor: none;
+    overflow: hidden;
+    box-sizing: border-box;
+}
+
+.bsod-content {
+    max-width: 800px;
+}
+
+.sad-face {
+    font-size: 120px;
+    margin-bottom: 40px;
+}
+
+.bsod-text {
+    font-size: 24px;
+    line-height: 1.4;
+    margin-bottom: 30px;
+}
+
+.bsod-progress {
+    font-size: 24px;
+    margin-bottom: 40px;
+}
+
+.bsod-details {
+    display: flex;
+    align-items: center;
+    gap: 20px;
+}
+
+.stop-code {
+    font-size: 14px;
+    line-height: 1.5;
+}
+
 .menu-item-row.disabled {
   color: rgba(255, 255, 255, 0.3);
 }
@@ -1295,5 +1482,17 @@ onUnmounted(() => {
 .desktop-item.selected .item-name {
   background: #0058d0;
   color: white;
+}
+
+/* Launchpad Transition */
+.launchpad-enter-active,
+.launchpad-leave-active {
+  transition: opacity 0.3s ease, transform 0.3s ease;
+}
+
+.launchpad-enter-from,
+.launchpad-leave-to {
+  opacity: 0;
+  transform: scale(1.1);
 }
 </style>

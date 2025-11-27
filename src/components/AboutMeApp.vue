@@ -1,5 +1,6 @@
 <script setup>
 import { ref } from 'vue'
+import folderIcon from '../assets/Icons/folder.png'
 
 const props = defineProps({
   initialX: {
@@ -102,7 +103,9 @@ const closeWindow = () => {
           :class="{ active: activeSection === 'about' }"
           @click="activeSection = 'about'"
         >
-          <span class="icon">👤</span>
+          <span class="icon">
+            <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M20 21v-2a4 4 0 0 0-4-4H8a4 4 0 0 0-4 4v2"></path><circle cx="12" cy="7" r="4"></circle></svg>
+          </span>
           About Me
         </div>
         <div 
@@ -110,7 +113,9 @@ const closeWindow = () => {
           :class="{ active: activeSection === 'projects' }"
           @click="activeSection = 'projects'"
         >
-          <span class="icon">📂</span>
+          <span class="icon">
+            <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M22 19a2 2 0 0 1-2 2H4a2 2 0 0 1-2-2V5a2 2 0 0 1 2-2h5l2 3h9a2 2 0 0 1 2 2z"></path></svg>
+          </span>
           Projects
         </div>
         <div 
@@ -118,7 +123,9 @@ const closeWindow = () => {
           :class="{ active: activeSection === 'downloads' }"
           @click="activeSection = 'downloads'"
         >
-          <span class="icon">⬇️</span>
+          <span class="icon">
+            <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M21 15v4a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2v-4"></path><polyline points="7 10 12 15 17 10"></polyline><line x1="12" y1="15" x2="12" y2="3"></line></svg>
+          </span>
           Downloads
         </div>
       </div>
@@ -130,7 +137,9 @@ const closeWindow = () => {
           :class="{ active: activeSection === 'icloud' }"
           @click="activeSection = 'icloud'"
         >
-          <span class="icon">☁️</span>
+          <span class="icon">
+            <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M18 10h-1.26A8 8 0 1 0 9 20h9a5 5 0 0 0 0-10z"></path></svg>
+          </span>
           iCloud Drive
         </div>
       </div>
@@ -179,15 +188,21 @@ From backend architecture and APIs to modern front-end interfaces and 3D/interac
         <!-- Projects Section -->
         <div v-else-if="activeSection === 'projects'" class="grid-view">
           <div class="grid-item" @dblclick="emit('open-project', 'portfolio')">
-            <div class="folder-icon">📂</div>
+            <div class="folder-icon">
+                <img :src="folderIcon" alt="Folder" width="64" height="64" />
+            </div>
             <span class="item-label">Portfolio V1</span>
           </div>
           <div class="grid-item" @dblclick="emit('open-project', 'ecommerce')">
-            <div class="folder-icon">📂</div>
+            <div class="folder-icon">
+                <img :src="folderIcon" alt="Folder" width="64" height="64" />
+            </div>
             <span class="item-label">E-Commerce App</span>
           </div>
           <div class="grid-item" @dblclick="emit('open-project', 'taskmanager')">
-            <div class="folder-icon">📂</div>
+            <div class="folder-icon">
+                <img :src="folderIcon" alt="Folder" width="64" height="64" />
+            </div>
             <span class="item-label">Task Manager</span>
           </div>
         </div>
