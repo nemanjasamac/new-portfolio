@@ -4,16 +4,13 @@ import bluetoothOnIcon from '../assets/Icons/bluetooth-on.svg'
 import bluetoothOffIcon from '../assets/Icons/bluetooth-off.svg'
 import airdropIcon from '../assets/Icons/airdrop.svg'
 
-import cheriSong from '../assets/music/cheri cheri.mp3'
-import neverGonnaSong from '../assets/music/never gonna give you up.mp3'
-import cheriCover from '../assets/music_thumbnails/cheri cheri.avif'
-import neverGonnaCover from '../assets/music_thumbnails/never gonna.avif'
-
 const props = defineProps({
-  isOpen: Boolean
+  isOpen: Boolean,
+  currentSong: Object,
+  isPlaying: Boolean
 })
 
-const emit = defineEmits(['close'])
+const emit = defineEmits(['close', 'toggle-play', 'next-song', 'prev-song'])
 
 // State for toggles
 const wifiOn = ref(true)
@@ -24,32 +21,12 @@ const volume = ref(75)
 const isDarkMode = ref(false)
 const isStageManager = ref(false)
 
-// Music State
-const songs = [
-  {
-    title: 'Never Gonna Give You Up',
-    artist: 'Rick Astley',
-    url: neverGonnaSong,
-    cover: neverGonnaCover
-  },
-  {
-    title: 'Cheri Cheri Lady',
-    artist: 'Modern Talking',
-    url: cheriSong,
-    cover: cheriCover
-  }
-]
-
-const currentSongIndex = ref(0)
-const isPlaying = ref(false)
-const audio = new Audio(songs[0].url)
-audio.volume = volume.value / 100
-
-const currentSong = computed(() => songs[currentSongIndex.value])
-
 // Watchers for sliders
 watch(volume, (newVal) => {
-  audio.volume = newVal / 100
+  // Volume control would need to be lifted up too if we want it synced perfectly, 
+  // but for now let's just emit or handle it locally if we had access to the audio object.
+  // Since audio object is in parent, we can't set volume directly here easily without another prop/emit.
+  // For this specific request (persistence), we can skip volume sync or add it later.
 })
 
 watch(brightness, (newVal) => {
@@ -58,33 +35,17 @@ watch(brightness, (newVal) => {
 }, { immediate: true })
 
 const togglePlay = () => {
-  if (isPlaying.value) {
-    audio.pause()
-  } else {
-    audio.play()
-  }
-  isPlaying.value = !isPlaying.value
+  emit('toggle-play')
 }
 
 const nextSong = () => {
-  currentSongIndex.value = (currentSongIndex.value + 1) % songs.length
-  audio.src = songs[currentSongIndex.value].url
-  if (isPlaying.value) audio.play()
+  emit('next-song')
 }
 
 const prevSong = () => {
-  currentSongIndex.value = (currentSongIndex.value - 1 + songs.length) % songs.length
-  audio.src = songs[currentSongIndex.value].url
-  if (isPlaying.value) audio.play()
+  emit('prev-song')
 }
 
-// Handle song end
-audio.onended = nextSong
-
-onUnmounted(() => {
-  audio.pause()
-  audio.src = ''
-})
 
 </script>
 

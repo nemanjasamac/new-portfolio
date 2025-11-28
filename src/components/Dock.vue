@@ -6,7 +6,11 @@ import finderIcon from '../assets/Icons/finder.png'
 import launchpadIcon from '../assets/Icons/launchpad.png'
 import mailIcon from '../assets/Icons/mail.svg'
 import notesIcon from '../assets/Icons/apple-notes.svg'
+import photosIcon from '../assets/Icons/apple-photos.svg'
+import newsIcon from '../assets/Icons/news.svg'
 import mapsIcon from '../assets/Icons/apple-maps.webp'
+import musicIcon from '../assets/Icons/apple-music.svg'
+import appStoreIcon from '../assets/Icons/app-store.svg'
 
 const dockItems = ref([
   { id: 'finder-app', label: 'Finder', icon: 'finder-app' },
@@ -18,7 +22,11 @@ const dockItems = ref([
   { id: 'safari', label: 'Safari', icon: 'safari' },
   { id: 'mail', label: 'Contact Me', icon: 'mail' },
   { id: 'notes', label: 'Notes', icon: 'notes' },
+  { id: 'photos', label: 'Photos', icon: 'photos' },
+  { id: 'news', label: 'News', icon: 'news' },
+  { id: 'music', label: 'Music', icon: 'music' },
   { id: 'maps', label: 'Maps', icon: 'maps' },
+  { id: 'appstore', label: 'App Store', icon: 'appstore' },
   { id: 'trash', label: 'Trash', icon: 'trash' },
 ])
 
@@ -101,8 +109,20 @@ const hoveredIndex = ref(null)
           <!-- Notes -->
           <img v-if="item.icon === 'notes'" :src="notesIcon" class="icon-img" alt="Notes" />
 
+          <!-- Photos -->
+          <img v-if="item.icon === 'photos'" :src="photosIcon" class="icon-img" alt="Photos" />
+
+          <!-- News -->
+          <img v-if="item.icon === 'news'" :src="newsIcon" class="icon-img" alt="News" />
+
+          <!-- Music -->
+          <img v-if="item.icon === 'music'" :src="musicIcon" class="icon-img" alt="Music" />
+
           <!-- Maps -->
           <img v-if="item.icon === 'maps'" :src="mapsIcon" class="icon-img" alt="Maps" />
+
+          <!-- App Store -->
+          <img v-if="item.icon === 'appstore'" :src="appStoreIcon" class="icon-img" alt="App Store" />
 
           <!-- Trash -->
           <svg v-if="item.icon === 'trash'" viewBox="0 0 100 100" class="icon-svg trash-icon">

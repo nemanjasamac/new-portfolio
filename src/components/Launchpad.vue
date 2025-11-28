@@ -7,7 +7,11 @@ import calculatorIcon from '../assets/Icons/calculator.svg'
 import mailIcon from '../assets/Icons/mail.svg'
 import settingsIcon from '../assets/Icons/apple-settings.svg'
 import notesIcon from '../assets/Icons/apple-notes.svg'
+import photosIcon from '../assets/Icons/apple-photos.svg'
+import newsIcon from '../assets/Icons/news.svg'
 import mapsIcon from '../assets/Icons/apple-maps.webp'
+import musicIcon from '../assets/Icons/apple-music.svg'
+import appStoreIcon from '../assets/Icons/app-store.svg'
 
 const props = defineProps({
   isOpen: Boolean
@@ -30,13 +34,8 @@ const apps = [
   { id: 'notes', label: 'Notes', icon: 'notes' },
   { id: 'photos', label: 'Photos', icon: 'photos' },
   { id: 'maps', label: 'Maps', icon: 'maps' },
-  { id: 'calendar', label: 'Calendar', icon: 'calendar' },
-  { id: 'reminders', label: 'Reminders', icon: 'reminders' },
   { id: 'news', label: 'News', icon: 'news' },
   { id: 'music', label: 'Music', icon: 'music' },
-  { id: 'podcasts', label: 'Podcasts', icon: 'podcasts' },
-  { id: 'tv', label: 'TV', icon: 'tv' },
-  { id: 'books', label: 'Books', icon: 'books' },
   { id: 'appstore', label: 'App Store', icon: 'appstore' },
 ]
 
@@ -139,11 +138,23 @@ const handleAppClick = (appId) => {
             <!-- Notes -->
             <img v-if="app.icon === 'notes'" :src="notesIcon" class="icon-img" alt="Notes" />
 
+            <!-- Photos -->
+            <img v-if="app.icon === 'photos'" :src="photosIcon" class="icon-img" alt="Photos" />
+
+            <!-- News -->
+            <img v-if="app.icon === 'news'" :src="newsIcon" class="icon-img" alt="News" />
+
+            <!-- Music -->
+            <img v-if="app.icon === 'music'" :src="musicIcon" class="icon-img" alt="Music" />
+
             <!-- Maps -->
-            <img v-if="app.icon === 'maps'" :src="mapsIcon" class="icon-img" alt="Maps" />
+            <img v-if="app.icon === 'maps'" :src="mapsIcon" class="icon-img rounded-icon" alt="Maps" />
+
+            <!-- App Store -->
+            <img v-if="app.icon === 'appstore'" :src="appStoreIcon" class="icon-img" alt="App Store" />
 
             <!-- Generic App Icon for others -->
-            <div v-if="!['finder-app', 'finder', 'resume', 'folder', 'terminal', 'safari', 'mail', 'settings', 'calculator', 'notes', 'maps'].includes(app.icon)" class="generic-icon" :class="app.icon">
+            <div v-if="!['finder-app', 'finder', 'resume', 'folder', 'terminal', 'safari', 'mail', 'settings', 'calculator', 'notes', 'maps', 'photos', 'news', 'music', 'appstore'].includes(app.icon)" class="generic-icon" :class="app.icon">
                 <div class="icon-bg"></div>
                 <span class="icon-symbol">{{ app.label[0] }}</span>
             </div>
@@ -251,6 +262,10 @@ const handleAppClick = (appId) => {
   filter: drop-shadow(0 4px 8px rgba(0,0,0,0.3));
 }
 
+.rounded-icon {
+  border-radius: 18px;
+}
+
 .app-label {
   color: white;
   font-size: 13px;
@@ -284,13 +299,8 @@ const handleAppClick = (appId) => {
 .notes .icon-bg { background: linear-gradient(135deg, #f6d365 0%, #fda085 100%); }
 .photos .icon-bg { background: linear-gradient(135deg, #84fab0 0%, #8fd3f4 100%); }
 .maps .icon-bg { background: linear-gradient(135deg, #a18cd1 0%, #fbc2eb 100%); }
-.calendar .icon-bg { background: linear-gradient(135deg, #ff9a9e 0%, #fecfef 99%, #fecfef 100%); }
-.reminders .icon-bg { background: linear-gradient(135deg, #fbc2eb 0%, #a6c1ee 100%); }
 .news .icon-bg { background: linear-gradient(135deg, #fdcbf1 0%, #e6dee9 100%); }
 .music .icon-bg { background: linear-gradient(135deg, #fa709a 0%, #fee140 100%); }
-.podcasts .icon-bg { background: linear-gradient(135deg, #96fbc4 0%, #f9f586 100%); }
-.tv .icon-bg { background: linear-gradient(135deg, #4facfe 0%, #00f2fe 100%); }
-.books .icon-bg { background: linear-gradient(135deg, #43e97b 0%, #38f9d7 100%); }
 .appstore .icon-bg { background: linear-gradient(135deg, #00c6fb 0%, #005bea 100%); }
 
 .icon-symbol {

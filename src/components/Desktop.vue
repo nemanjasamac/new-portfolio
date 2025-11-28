@@ -11,10 +11,19 @@ import ContactApp from './ContactApp.vue'
 import Launchpad from './Launchpad.vue'
 import CalculatorApp from './CalculatorApp.vue'
 import NotesApp from './NotesApp.vue'
+import PhotosApp from './PhotosApp.vue'
+import NewsApp from './NewsApp.vue'
+import MusicApp from './MusicApp.vue'
 import MapsApp from './MapsApp.vue'
+import AppStoreApp from './AppStoreApp.vue'
 import folderIcon from '../assets/Icons/folder.png'
 import safariIcon from '../assets/Icons/safari.svg'
 import mailIcon from '../assets/Icons/mail.svg'
+
+import cheriSong from '../assets/music/cheri cheri.mp3'
+import neverGonnaSong from '../assets/music/never gonna give you up.mp3'
+import cheriCover from '../assets/music_thumbnails/cheri cheri.avif'
+import neverGonnaCover from '../assets/music_thumbnails/never gonna.avif'
 
 const emit = defineEmits(['reboot'])
 
@@ -27,7 +36,11 @@ const isContactOpen = ref(false)
 const isLaunchpadOpen = ref(false)
 const isCalculatorOpen = ref(false)
 const isNotesOpen = ref(false)
+const isPhotosOpen = ref(false)
+const isNewsOpen = ref(false)
+const isMusicOpen = ref(false)
 const isMapsOpen = ref(false)
+const isAppStoreOpen = ref(false)
 const currentWallpaper = ref('/wallpaper.jpg')
 const aboutMeInitialSection = ref('about')
 const openProjects = ref([])
@@ -97,6 +110,61 @@ const desktopItems = ref([])
 const isDragging = ref(false)
 const dragOffsets = ref({})
 let timer = null
+
+// Music State
+const songs = [
+  {
+    title: 'Never Gonna Give You Up',
+    artist: 'Rick Astley',
+    url: neverGonnaSong,
+    cover: neverGonnaCover
+  },
+  {
+    title: 'Cheri Cheri Lady',
+    artist: 'Modern Talking',
+    url: cheriSong,
+    cover: cheriCover
+  }
+]
+
+const currentSongIndex = ref(0)
+const isPlaying = ref(false)
+const audio = new Audio(songs[0].url)
+const volume = ref(75)
+audio.volume = volume.value / 100
+
+const currentSong = computed(() => songs[currentSongIndex.value])
+
+const togglePlay = () => {
+  if (isPlaying.value) {
+    audio.pause()
+  } else {
+    audio.play()
+  }
+  isPlaying.value = !isPlaying.value
+}
+
+const nextSong = () => {
+  currentSongIndex.value = (currentSongIndex.value + 1) % songs.length
+  audio.src = songs[currentSongIndex.value].url
+  if (isPlaying.value) audio.play()
+}
+
+const prevSong = () => {
+  currentSongIndex.value = (currentSongIndex.value - 1 + songs.length) % songs.length
+  audio.src = songs[currentSongIndex.value].url
+  if (isPlaying.value) audio.play()
+}
+
+const playSong = (index) => {
+  currentSongIndex.value = index
+  audio.src = songs[currentSongIndex.value].url
+  audio.play()
+  isPlaying.value = true
+}
+
+// Handle song end
+audio.onended = nextSong
 
 // Easter Egg State
 const showBSOD = ref(false)
@@ -209,8 +277,16 @@ const handleDockClick = (id) => {
     isCalculatorOpen.value = true
   } else if (id === 'notes') {
     isNotesOpen.value = true
+  } else if (id === 'photos') {
+    isPhotosOpen.value = true
+  } else if (id === 'news') {
+    isNewsOpen.value = true
+  } else if (id === 'music') {
+    isMusicOpen.value = true
   } else if (id === 'maps') {
     isMapsOpen.value = true
+  } else if (id === 'appstore') {
+    isAppStoreOpen.value = true
   }
 }
 
@@ -883,7 +959,15 @@ onUnmounted(() => {
       </div>
     </div>
     
-    <ControlCenter :is-open="isControlCenterOpen" @close="isControlCenterOpen = false" />
+    <ControlCenter 
+      :is-open="isControlCenterOpen" 
+      :current-song="currentSong"
+      :is-playing="isPlaying"
+      @close="isControlCenterOpen = false" 
+      @toggle-play="togglePlay"
+      @next-song="nextSong"
+      @prev-song="prevSong"
+    />
 
     <!-- Desktop Content Area -->
     <div class="desktop-content" @mousedown="handleMouseDown" @mousemove="handleMouseMove" @mouseup="handleMouseUp">
@@ -1020,11 +1104,50 @@ onUnmounted(() => {
       @focus="() => {}"
     />
 
+    <!-- Photos App -->
+    <PhotosApp 
+      :is-open="isPhotosOpen" 
+      :z-index="200"
+      @close="isPhotosOpen = false"
+      @focus="() => {}"
+    />
+
+    <!-- News App -->
+    <NewsApp 
+      :is-open="isNewsOpen" 
+      :z-index="200"
+      @close="isNewsOpen = false"
+      @focus="() => {}"
+    />
+
+    <!-- Music App -->
+    <MusicApp 
+      :is-open="isMusicOpen" 
+      :z-index="200"
+      :current-song="currentSong"
+      :is-playing="isPlaying"
+      :songs="songs"
+      @close="isMusicOpen = false"
+      @focus="() => {}"
+      @toggle-play="togglePlay"
+      @next-song="nextSong"
+      @prev-song="prevSong"
+      @play-song="playSong"
+    />
+
     <!-- Maps App -->
     <MapsApp 
       :is-open="isMapsOpen" 
       :z-index="200"
       @close="isMapsOpen = false"
+      @focus="() => {}"
+    />
+
+    <!-- App Store App -->
+    <AppStoreApp 
+      :is-open="isAppStoreOpen" 
+      :z-index="200"
+      @close="isAppStoreOpen = false"
       @focus="() => {}"
     />
 
@@ -1052,8 +1175,8 @@ onUnmounted(() => {
 .menu-bar {
   width: 100%;
   height: 24px;
-  backdrop-filter: blur(20px);
-  -webkit-backdrop-filter: blur(20px);
+  /* backdrop-filter: blur(20px);
+  -webkit-backdrop-filter: blur(20px); */
   display: flex;
   justify-content: space-between;
   align-items: center;
